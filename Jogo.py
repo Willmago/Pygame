@@ -1,14 +1,16 @@
 import pygame
-from config import state, clock, window, INIT, RUNNING, QUIT, FPS
-from telas import init_screen, game_screen
+from config import *
+from telas import init_screen, game_screen, map_init
 
-while state != QUIT:
+# while state != QUIT:
 
-    clock.tick(FPS)
-    if state == INIT:
-        state = init_screen(window)
-    elif state == RUNNING:
-        state = game_screen(window)
-    
+#     clock.tick(FPS)
+#     if state == INIT:
+#         state = init_screen(window)
+#     elif state == RUNNING:
+#         state = game_screen(window)
 
-pygame.quit()
+# pygame.quit()
+
+map_init(window, MAP)
+
