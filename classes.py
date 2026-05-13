@@ -35,10 +35,10 @@ class Player(pygame.sprite.Sprite):
         self.state = STILL # Começa imóvel
 
         # Ajusta o tamanho da imagem
-        player_img = pygame.transform.scale(player_img, (PLAYER_WIDTH, PLAYER_HEIGHT))
+        self.player_img = pygame.transform.scale(player_img, (PLAYER_WIDTH, PLAYER_HEIGHT))
         
         # Define a imagem do sprite
-        self.image = player_img
+        self.image = self.player_img
         # Detalhes sobre o posicionamento
         self.rect = self.image.get_rect()
 
@@ -48,7 +48,7 @@ class Player(pygame.sprite.Sprite):
 
         # Posiciona o personagem
         self.rect.x = colum * TILE_SIZE
-        self.rect.y = colum * TILE_SIZE
+        self.rect.y = row * TILE_SIZE
 
         # Inicializa velocidades
         self.speedx = 0
@@ -125,6 +125,13 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.right >= WIDTH:
             self.rect.right = WIDTH - 1
 
+        # Muda o sprite de acordo com a direção do movimento
+        if self.speedx > 0:     # Direita
+            self.image = pygame.transform.flip(self.player_img, False, False)
+
+        elif self.speedx < 0:   # Esquerda
+            self.image = pygame.transform.flip(self.player_img, True, False)
+
         # Se colidiu com algum bloco, volta para o ponto antes da colisão
         # O personagem não colide com as plataformas quando está andando na horizontal
         collisions = pygame.sprite.spritecollide(self, self.blocks, False)
@@ -133,9 +140,12 @@ class Player(pygame.sprite.Sprite):
             # Indo para a direita
             if self.speedx > 0:
                 self.rect.right  = collision.rect.left
+
             # Indo para a esquerda
             elif self.speedx < 0:
                 self.rect.left = collision.rect.right
+
+                
 
     # Método que faz o personagem pular
     def jump(self):
@@ -144,3 +154,21 @@ class Player(pygame.sprite.Sprite):
             self.speedy -= JUMP_SIZE
             self.state = JUMPING
 
+def player_movement(player, event):
+
+    if event.type == pygame.KEYDOWN:
+        # Dependendo da tecla, altera o estado do jogador.
+        if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+            player.speedx -= SPEED_X
+        elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+            player.speedx += SPEED_X
+        elif event.key == pygame.K_UP or event.key == pygame.K_w or event.key == pygame.K_SPACE:
+            player.jump()
+
+    # Verifica se soltou alguma tecla.
+    if event.type == pygame.KEYUP:
+        # Dependendo da tecla, altera o estado do jogador.
+        if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+            player.speedx += SPEED_X
+        elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+            player.speedx -= SPEED_X

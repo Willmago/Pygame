@@ -16,7 +16,7 @@ def init_screen(window):
         
         # - Verifica se o usuário apertou alguma tecla...
         if event.type == pygame.KEYDOWN:
-            state = RUNNING # ... e inicia o jogo
+            state = BOSS1 # ... e inicia o jogo
 
     window.fill((255, 0, 255))  # Preence a tela de Roxo
     window.blit(init_text, (WIDTH/2, HEIGHT/2))
@@ -24,79 +24,33 @@ def init_screen(window):
     pygame.display.update()     # Atualiza a tela
     return state                # Retorna o estado para continuar o jogo
 
-def map_init(window, mapa):
-    def game_screen(window):
-        clock = pygame.time.Clock()
 
-        assets = load_assets(img_dir)
+def game_screen(window, mapa, boss):
 
-        all_sprites = pygame.sprite.Group()
+    clock = pygame.time.Clock()
 
-        platforms = pygame.sprite.Group()
+    assets = load_assets(img_dir)
 
-        blocks = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
 
-        player = Player(assets[PLAYER_IMG], 12, 2, platforms, blocks)
+    platforms = pygame.sprite.Group()
 
-        for row in range(len(mapa)):
-            for colum in range(len(mapa[row])):
-                tile_type = mapa[row][colum]
-                if tile_type != EMPTY:
-                    tile = Tile(assets[tile_type], row, colum)
-                    all_sprites.add(tile)
-                    if tile_type == BLOCK:
-                        blocks.add(tile)
-                    elif tile_type == PLATF:
-                        platforms.add(tile)
-            
-        all_sprites.add(player)
+    blocks = pygame.sprite.Group()
 
-        PLAYING = 0
-        DONE = 1
+    player = Player(assets[PLAYER_IMG], 12, 2, platforms, blocks)
+
+    for row in range(len(mapa)):
+        for colum in range(len(mapa[row])):
+            tile_type = mapa[row][colum]
+            if tile_type != EMPTY:
+                tile = Tile(assets[tile_type], row, colum)
+                all_sprites.add(tile)
+                if tile_type == BLOCK:
+                    blocks.add(tile)
+                elif tile_type == PLATF:
+                    platforms.add(tile)
         
-
-        state = PLAYING
-        while state != DONE:
-
-            # Ajusta a velocidade do jogo.
-            clock.tick(FPS)
-
-            # Processa os eventos (mouse, teclado, botão, etc).
-            for event in pygame.event.get():
-
-                # Verifica se foi fechado.
-                if event.type == pygame.QUIT:
-                    state = DONE
-
-                # Verifica se apertou alguma tecla.
-                if event.type == pygame.KEYDOWN:
-                    # Dependendo da tecla, altera o estado do jogador.
-                    if event.key == pygame.K_LEFT:
-                        player.speedx -= SPEED_X
-                    elif event.key == pygame.K_RIGHT:
-                        player.speedx += SPEED_X
-                    elif event.key == pygame.K_UP or event.key == pygame.K_SPACE:
-                        player.jump()
-
-                # Verifica se soltou alguma tecla.
-                if event.type == pygame.KEYUP:
-                    # Dependendo da tecla, altera o estado do jogador.
-                    if event.key == pygame.K_LEFT:
-                        player.speedx += SPEED_X
-                    elif event.key == pygame.K_RIGHT:
-                        player.speedx -= SPEED_X
-
-            # Depois de processar os eventos.
-            # Atualiza a acao de cada sprite. O grupo chama o método update() de cada Sprite dentre dele.
-            all_sprites.update()
-
-            # A cada loop, redesenha o fundo e os sprites
-            screen.fill((0, 0, 0))
-            all_sprites.draw(window)
-
-            # Depois de desenhar tudo, inverte o display.
-            pygame.display.flip()
-
+    all_sprites.add(player)
     TITULO = 'OI'
     
     # Inicialização do Pygame.
@@ -109,34 +63,38 @@ def map_init(window, mapa):
     # Nome do jogo
     pygame.display.set_caption(TITULO)
 
-    # Imprime instruções
-    print('*' * len(TITULO))
-    print(TITULO.upper())
-    print('*' * len(TITULO))
-    print('Utilize as setas do teclado para andar e pular.')
+    state = boss
+    while state == boss:
 
-    # Comando para evitar travamentos.
-    try:
-        game_screen(window)
-    finally:
-        pygame.quit()
+        # Ajusta a velocidade do jogo.
+        clock.tick(FPS)
 
-
-def game_screen(window):
-
-    state = RUNNING
-    
-
-    if screen == BOSS1:
-
-        # -- Verifica os eventos do frame
+        # Processa os eventos (mouse, teclado, botão, etc).
         for event in pygame.event.get():
-            # - Verifica se foi fechado.
+
+            # Verifica se foi fechado.
             if event.type == pygame.QUIT:
                 state = QUIT
+            
+            player_movement(player, event)
 
-        window.fill((100, 100, 100)) # Preence a tela de Roxo
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_0:
+                    state = BOSS2
+                elif event.key == pygame.K_r:
+                    state = INIT
 
-    pygame.display.update()     # Atualiza a tela
+            
+
+        # Depois de processar os eventos.
+        # Atualiza a acao de cada sprite. O grupo chama o método update() de cada Sprite dentre dele.
+        all_sprites.update()
+
+        # A cada loop, redesenha o fundo e os sprites
+        screen.fill((0, 0, 0))
+        all_sprites.draw(window)
+
+        # Depois de desenhar tudo, inverte o display.
+        pygame.display.flip()
 
     return state
