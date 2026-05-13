@@ -45,6 +45,7 @@ PLAYER = 'PLAYER'
 ALL_SPRITES = 'ALL'
 # Imagens
 PLAYER_IMG = 'player_img'
+BULLET1 = 'Bullet1'
 
 # Define os tipos de tiles
 BLOCK = 0
@@ -100,6 +101,7 @@ def load_assets(img_dir):
     assets[PLAYER_IMG] = pygame.image.load(path.join(img_dir, 'hero-single.png')).convert_alpha()
     assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
     assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
+    assets[BULLET1] = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert()
     return assets
 
 # --- Gera tela principal
