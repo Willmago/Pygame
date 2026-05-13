@@ -1,3 +1,4 @@
+# --- Importa e inicia pacotes
 import pygame
 from config import *
 
@@ -126,10 +127,13 @@ class Player(pygame.sprite.Sprite):
             self.rect.right = WIDTH - 1
 
         # Muda o sprite de acordo com a direção do movimento
-        if self.speedx > 0:     # Direita
+        # Se está indo para a direita...
+        if self.speedx > 0:
+            # Vira para a esquerda
             self.image = pygame.transform.flip(self.player_img, False, False)
-
-        elif self.speedx < 0:   # Esquerda
+        # Caso o contrário...
+        elif self.speedx < 0:
+            # Vira para a esquerda
             self.image = pygame.transform.flip(self.player_img, True, False)
 
         # Se colidiu com algum bloco, volta para o ponto antes da colisão
@@ -145,8 +149,6 @@ class Player(pygame.sprite.Sprite):
             elif self.speedx < 0:
                 self.rect.left = collision.rect.right
 
-                
-
     # Método que faz o personagem pular
     def jump(self):
         # Só pode pular se não estiver pulando ou caindo
@@ -154,21 +156,28 @@ class Player(pygame.sprite.Sprite):
             self.speedy -= JUMP_SIZE
             self.state = JUMPING
 
+# Função auxiliar para determinar o movimento do jogador
 def player_movement(player, event):
 
+    # Se apertou uma tecla...
     if event.type == pygame.KEYDOWN:
-        # Dependendo da tecla, altera o estado do jogador.
+        # Dependendo da tecla, altera o estado do jogador
+        # - Movimento para a esquerda
         if event.key == pygame.K_LEFT or event.key == pygame.K_a:
             player.speedx -= SPEED_X
+        # - Movimento para a direita
         elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
             player.speedx += SPEED_X
+        # - Pulo
         elif event.key == pygame.K_UP or event.key == pygame.K_w or event.key == pygame.K_SPACE:
             player.jump()
 
     # Verifica se soltou alguma tecla.
     if event.type == pygame.KEYUP:
         # Dependendo da tecla, altera o estado do jogador.
+        # - Para movimento para esquerda
         if event.key == pygame.K_LEFT or event.key == pygame.K_a:
             player.speedx += SPEED_X
+        # - Para movimento para a direita
         elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
             player.speedx -= SPEED_X

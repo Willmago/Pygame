@@ -2,47 +2,43 @@
 import pygame
 from os import path
 
+# Inicializa o pygame
 pygame.init()
+pygame.mixer.init()
 
 # --- Constantes
 # -- Tela
-WIDTH = 1080
-HEIGHT = 720
-FPS = 30
+WIDTH = 1080    # Largura da tela
+HEIGHT = 720    # Altura da tela
+FPS = 30        # Taxa de quadros por segundo
+TITULO = 'OI'   # Título da janela
 
 # -- Estados de jogo
-INIT = 0
-RUNNING = 1
-OVER = 2    # Determina quando a tela atual acabou. Utilizada para os bosses
-QUIT = 3
-
-# -- Telas
-# INIT = 0
-BOSS1 = 1
-BOSS2 = 2
+# Determinam, principalmente, a tela a ser carregada
+INIT = 0    # Inicializando
+BOSS1 = 1   # Primeiro boss
+BOSS2 = 2   # Segundo boss
+QUIT = 3    # Jogo fecha
 
 # -- Tamanhos
-TILE_SIZE = 40
-PLAYER_WIDTH = TILE_SIZE
-PLAYER_HEIGHT = int(TILE_SIZE * 1.5)
+TILE_SIZE = 40                          # Tamanho dos tiles
+PLAYER_WIDTH = TILE_SIZE                # Largura do player
+PLAYER_HEIGHT = int(TILE_SIZE * 1.5)    # Altura do player
 
 # Variáveis do player
-STILL = 0
-JUMPING = 1
-FALLING = 2
-JUMP_SIZE = TILE_SIZE * 1.2
-SPEED_X = 15
+STILL = 0                   # estado No chão
+JUMPING = 1                 # estado Subindo
+FALLING = 2                 # estado Descendo
+JUMP_SIZE = TILE_SIZE * 1.2 # Força do pulo
+SPEED_X = 15                # Velocidade horizontal
 
 # -- Outros
-GRAVITY = 5
+GRAVITY = 5 # Força da gravidade
 
 # --- Determina assets
-# Estabelece a pasta que contem as figuras e sons.
+# Estabelece a pasta que contem as imagens
 img_dir = path.join(path.dirname(__file__), 'assets/img')
 
-# Sprites
-PLAYER = 'PLAYER'
-ALL_SPRITES = 'ALL'
 # Imagens
 PLAYER_IMG = 'player_img'
 
@@ -50,7 +46,6 @@ PLAYER_IMG = 'player_img'
 BLOCK = 0
 PLATF = 1
 EMPTY = -1
-
 
 # Define o mapa com os tipos de tiles (27 x 18)
 MAP = [
@@ -74,6 +69,7 @@ MAP = [
     [BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK]
 ]
 
+# Mapa do segundo boss
 MAP2 = [
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
@@ -95,6 +91,7 @@ MAP2 = [
     [BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK]
 ]
 
+# Função para carregar os assets (imagens, sons) a partir dos arquivos locais
 def load_assets(img_dir):
     assets = {}
     assets[PLAYER_IMG] = pygame.image.load(path.join(img_dir, 'hero-single.png')).convert_alpha()
@@ -102,12 +99,14 @@ def load_assets(img_dir):
     assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
     return assets
 
-# --- Gera tela principal
+# Gera tela principal
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
-# Variáveis de jogo
-state = INIT
-map_init = False
-screen = INIT
+# Nome do jogo
+pygame.display.set_caption(TITULO)
 
+# Estado inicial do jogo
+state = INIT        
+
+# relógio para controle de FPS
 clock = pygame.time.Clock()
