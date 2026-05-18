@@ -26,7 +26,7 @@ class Tile(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
 
     # Construtor da classe
-    def __init__(self, player_img, row, colum, platforms, blocks):
+    def __init__(self, player_img, row, colum, platforms, blocks, all_bullets, assets, all_sprites):
 
         # Construtor da classe ppai (Sprite)
         pygame.sprite.Sprite.__init__(self)
@@ -59,6 +59,19 @@ class Player(pygame.sprite.Sprite):
         # Essa variável sempre conterá a maior altura alcançada pelo jogador
         # antes de começar a cair
         self.highest_y = self.rect.bottom
+
+        #imagem bala
+        self.bulletimg = assets[BULLET1]
+
+        #dicionário assets
+        self.all_sprites = all_sprites
+
+        #grupo balas
+        self.all_bullets = all_bullets
+
+        #tempo do tiro
+        self.shoot_ticks = pygame.time.get_ticks()
+        self.last_shot = 0
     
     # Método que atualiza a posição do personagem
     def update(self):
@@ -148,21 +161,24 @@ class Player(pygame.sprite.Sprite):
             # Indo para a esquerda
             elif self.speedx < 0:
                 self.rect.left = collision.rect.right
-        # Jogador atira
-        def shoot(self):
-            # Verifica se pode atirar
-            now = pygame.time.get_ticks()
-            # Verifica quantos ticks se passaram desde o último tiro.
-            elapsed_ticks = now - self.last_shot
 
-            # Se já pode atirar novamente...
-            if elapsed_ticks > self.shoot_ticks:
-                # Marca o tick da nova imagem.
-                self.last_shot = now
-                # A nova bala vai ser criada a partir do personagem
-                new_bullet = Bullet(self.assets, self.rect.x, self.rect.y)
-                self.groups['Bullet1'].add(new_bullet)
-                self.groups['all_bullets'].add(new_bullet)      
+
+    # Jogador atira
+    def shoot(self):
+        # Verifica se pode atirar
+        now = pygame.time.get_ticks()
+        # Verifica quantos ticks se passaram desde o último tiro.
+        elapsed_ticks = now - self.last_shot
+
+        # Se já pode atirar novamente...
+        if elapsed_ticks > self.shoot_ticks:
+            # Marca o tick da nova imagem.
+            self.last_shot = now
+            # A nova bala vai ser criada a partir do personagem
+            new_bullet = Bullet(self.bulletimg, self.rect.x, self.rect.y)
+            self.all_bullets.add(new_bullet)
+            self.all_sprites.add(new_bullet)
+     
 
     # Método que faz o personagem pular
     def jump(self):
@@ -173,17 +189,16 @@ class Player(pygame.sprite.Sprite):
 
 class Bullet(pygame.sprite.Sprite):
     # Construtor da classe.
-    def __init__(self, assets, cordx, cordy):
+    def __init__(self, bullet_img, cordx, cordy):
         # Construtor da classe mãe (Sprite).
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = assets['Bullet1']
-        self.mask = pygame.mask.from_surface(self.image)
+        self.image = pygame.transform.scale(bullet_img, (20, 10))
         self.rect = self.image.get_rect()
 
         # Coloca no lugar inicial definido em x, y do constutor
         self.rect.center = (cordx + PLAYER_WIDTH, cordy + PLAYER_HEIGHT/2)
-        self.speedx = -30  # Velocidade fixa para cima
+        self.speedx = 50  # Velocidade para o lado
 
     def update(self):
         # A bala só se move no eixo x
@@ -192,7 +207,6 @@ class Bullet(pygame.sprite.Sprite):
         # Se o tiro passar do inicio da tela, morre.
         if self.rect.x < 0 or self.rect.x > WIDTH:
             self.kill()
-        
 
 # Função auxiliar para determinar o movimento do jogador
 def player_movement(player, event):
@@ -209,6 +223,9 @@ def player_movement(player, event):
         # - Pulo
         elif event.key == pygame.K_UP or event.key == pygame.K_w or event.key == pygame.K_SPACE:
             player.jump()
+        # - Tiro
+        elif event.key == pygame.K_x:
+            player.shoot()
 
     # Verifica se soltou alguma tecla.
     if event.type == pygame.KEYUP:
