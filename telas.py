@@ -75,9 +75,6 @@ def game_screen(window, mapa, boss):
     # Adiciona o player depois para garantir que vai ser
     # desenhado por cima
     all_sprites.add(player)
-    
-    # Inicialização do Pygame.
-    pygame.init()
 
     # Define o estado inicial como o chefe atual
     state = boss
