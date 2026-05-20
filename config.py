@@ -25,12 +25,17 @@ TILE_SIZE = 40                          # Tamanho dos tiles
 PLAYER_WIDTH = TILE_SIZE                # Largura do player
 PLAYER_HEIGHT = int(TILE_SIZE * 1.5)    # Altura do player
 
-# Variáveis do player
+# - Variáveis do player
 STILL = 0                   # estado No chão
 JUMPING = 1                 # estado Subindo
 FALLING = 2                 # estado Descendo
-JUMP_SIZE = TILE_SIZE * 1.2 # Força do pulo
+JUMP_SIZE = TILE_SIZE * 1.1 # Força do pulo
 SPEED_X = 6                 # Velocidade horizontal (menor que a bala)
+
+# - Variáveis do 
+MAUA_SPD = 10            # Velocidade de andar do chefe
+MAUA_BULLET_SPD = 10    # Velocidade horizontal das balas do chefe
+MAUA_BULLET_CD = 250    # Intervalo entre as balas
 
 # -- Outros
 GRAVITY = 5 # Força da gravidade
@@ -48,6 +53,11 @@ img_dir = path.join(path.dirname(__file__), 'assets/img')
 # Imagens
 PLAYER_IMG = 'player_img'
 BULLET1 = 'Bullet1'
+
+# - Mauazinho 
+MAUA_IMG = PLAYER_IMG
+MAUA_BULLET_IMG = PLAYER_IMG
+MAUA_LASER_IMG = PLAYER_IMG
 
 # Define os tipos de tiles
 BLOCK = 0

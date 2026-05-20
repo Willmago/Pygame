@@ -2,6 +2,7 @@
 import pygame
 import math
 from config import *
+import random
 
 # Classe que representa os blocos do cenário
 class Tile(pygame.sprite.Sprite):
@@ -38,7 +39,8 @@ class Player(pygame.sprite.Sprite):
 
         # Ajusta o tamanho da imagem
         self.player_img = pygame.transform.scale(player_img, (PLAYER_WIDTH, PLAYER_HEIGHT))
-        
+        self.img_flipped = pygame.transform.flip(self.player_img, True, False)
+
         # Define a imagem do sprite
         self.image = self.player_img
         # Detalhes sobre o posicionamento
@@ -279,3 +281,4 @@ def player_movement(player, event):
         # - Para movimento para a direita
         elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
             player.speedx -= SPEED_X
+

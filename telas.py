@@ -72,6 +72,10 @@ def game_screen(window, mapa, boss):
                 elif tile_type == PLATF:
                     platforms.add(tile)
     
+    # Gera o chefão e o adiciona no grupo de sprites
+    mauazinho = Mauazinho(assets[MAUA_IMG], assets[MAUA_BULLET_IMG], assets[MAUA_LASER_IMG], all_sprites)
+    all_sprites.add(mauazinho)
+
     # Adiciona o player depois para garantir que vai ser
     # desenhado por cima
     all_sprites.add(player)
@@ -111,6 +115,8 @@ def game_screen(window, mapa, boss):
         # A cada loop, redesenha o fundo e os sprites
         window.fill((0, 0, 0))
         all_sprites.draw(window)
+
+        print(mauazinho.state)
 
         # Depois de desenhar tudo, inverte o display.
         pygame.display.flip()
