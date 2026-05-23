@@ -45,8 +45,10 @@ def game_screen(window, mapa, boss):
     platforms = pygame.sprite.Group()
     # Cria um grupo para os blocos
     blocks = pygame.sprite.Group()
+    # Cria um grupo para os tiros
+    all_bullets = pygame.sprite.Group()
     # Gera o player
-    player = Player(assets[PLAYER_IMG], 12, 2, platforms, blocks)
+    player = Player(assets[PLAYER_IMG], 12, 2, platforms, blocks, all_bullets, assets, all_sprites)
 
     # -- Cria o mapa de acordo com a variável fornecida
     # Para cada linha...
@@ -77,9 +79,6 @@ def game_screen(window, mapa, boss):
     # Adiciona o player depois para garantir que vai ser
     # desenhado por cima
     all_sprites.add(player)
-    
-    # Inicialização do Pygame.
-    pygame.init()
 
     # Define o estado inicial como o chefe atual
     state = boss

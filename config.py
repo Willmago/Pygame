@@ -30,7 +30,7 @@ STILL = 0                   # estado No chão
 JUMPING = 1                 # estado Subindo
 FALLING = 2                 # estado Descendo
 JUMP_SIZE = TILE_SIZE * 1.1 # Força do pulo
-SPEED_X = 15                # Velocidade horizontal
+SPEED_X = 6                 # Velocidade horizontal (menor que a bala)
 
 # - Variáveis do 
 MAUA_SPD = 10            # Velocidade de andar do chefe
@@ -39,6 +39,12 @@ MAUA_BULLET_CD = 250    # Intervalo entre as balas
 
 # -- Outros
 GRAVITY = 5 # Força da gravidade
+ 
+# -- Tiro
+SHOOT_COOLDOWN = 150  # Intervalo mínimo entre tiros (ms) — cadência estilo Cuphead
+BULLET_SPEED = 18     # Velocidade da bala em pixels por frame
+BULLET_WIDTH = 40     # Largura do sprite da bala
+BULLET_HEIGHT = 20    # Altura do sprite da bala
 
 # --- Determina assets
 # Estabelece a pasta que contem as imagens
@@ -108,7 +114,7 @@ def load_assets(img_dir):
     assets[PLAYER_IMG] = pygame.image.load(path.join(img_dir, 'hero-single.png')).convert_alpha()
     assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
     assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
-    assets[BULLET1] = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert()
+    assets[BULLET1] = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert_alpha()
     return assets
 
 # Gera tela principal
