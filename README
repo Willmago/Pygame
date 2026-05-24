@@ -7,6 +7,7 @@
     -> Próprios (X)
     -> Bala ( )
     -> Laser (X)
+    -> Morto (X)
 - Balas (X)
     -> Corrigir angulação (X)
 - Laser
@@ -15,7 +16,7 @@
     -> Direção de laser (X)
 - Interação entre boss e player
     -> Player leva dano e morre ( )
-    -> Boss leva dano e morre ( )
+    -> Boss leva dano e morre (X)
 
 --- Como executa o jogo
 
