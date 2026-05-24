@@ -1,16 +1,30 @@
 --- A fazer Willian
+- Ultimas mudanças
+    -> Grupo all_enemies: determina todas as ameaças que causam
+    dano ao player
 -- Mauazinho
 - Sprites
-    -> Próprios
-    -> Bala
-    -> Laser
-- Aviso de laser
+    -> Próprios (X)
+    -> Bala ( )
+    -> Laser (X)
+- Balas (X)
+    -> Corrigir angulação (X)
+- Laser
+    -> Aviso (X)
+    -> Laser de fato (X)
+    -> Direção de laser (X)
+- Interação entre boss e player
+    -> Player leva dano e morre ( )
+    -> Boss leva dano e morre ( )
 
 --- Como executa o jogo
 
 --- Vídeo 
 
 --- Integrantes
+-> Gustavo C.
+-> Henrique C.
+-> Willian C.
 
 --- Explicação do jogo
 

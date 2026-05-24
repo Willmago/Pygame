@@ -2,13 +2,19 @@
 from config import *
 from classes import *
 
+
 # Define a fonte padrão
-init_font = pygame.font.SysFont(None, 48)
+init_font = pygame.font.SysFont('bauhaus93', 48)
 
 # Texto da tela inicial
-init_text = init_font.render("QUALQUER COISA QUE EU ESCREVER VAI ESTAR CENTRALIZADA", True, (10, 10, 10))
-text_rect = init_text.get_rect()    # Pega o retângulo circunscrito ao texto
-text_width = text_rect.width        # Pega o comprimento horizontal do texto em pixels
+init_text = init_font.render("Pressione ENTER para iniciar!", True, (10, 10, 10))
+init_text_rect = init_text.get_rect()    # Pega o retângulo circunscrito ao texto
+text_width = init_text_rect.width        # Pega o comprimento horizontal do texto em pixels
+
+# Texto pós morte do boss
+boss_dead_txt = init_font.render("Mascote derrotado! Pressione ENTER para continuar.", True, (255, 255, 255))
+boss_text_rect = boss_dead_txt.get_rect()
+boss_text_width = boss_text_rect.width
 
 # --- Tela de início
 def init_screen(window):
@@ -22,11 +28,11 @@ def init_screen(window):
             state = QUIT
 
         # - Verifica se o usuário apertou alguma tecla...
-        if event.type == pygame.KEYDOWN:
-            state = BOSS1 # ... e inicia o jogo
+        if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            state = MAUA # ... e inicia o jogo
 
     window.fill((255, 0, 255))                                  # Preence a tela de Roxo
-    window.blit(init_text, (WIDTH/2 - text_width/2, HEIGHT/2))  # Desenha o texto no centro da tela
+    window.blit(init_text, (WIDTH/2 - text_width/2, 3*HEIGHT/4))  # Desenha o texto no centro da tela
 
     pygame.display.update()     # Atualiza a tela
     return state                # Retorna o estado para continuar o jogo
@@ -45,10 +51,29 @@ def game_screen(window, mapa, boss):
     platforms = pygame.sprite.Group()
     # Cria um grupo para os blocos
     blocks = pygame.sprite.Group()
-    # Cria um grupo para os tiros
+    # Cria um grupo para os tiros do player
     all_bullets = pygame.sprite.Group()
+    # Cria um grupo para as ameaças,
+    # tudo que é nocivo ao player
+    all_enemies = pygame.sprite.Group()
+    # Agrupa os grupos de sprites em
+    # um dicionário
+    all_groups = {
+        'all_sprites': all_sprites,
+        'platforms': platforms,
+        'blocks': blocks,
+        'all_bullets': all_bullets,
+        'all_enemies': all_enemies
+    }
+
+    # Gera o chefão de acordo com a tela
+    if boss == MAUA:
+        enemy = Mauazinho(assets, all_groups)
+    elif boss == BOSS2:
+        enemy = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
+
     # Gera o player
-    player = Player(assets[PLAYER_IMG], 12, 2, platforms, blocks, all_bullets, assets, all_sprites)
+    player = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
 
     # -- Cria o mapa de acordo com a variável fornecida
     # Para cada linha...
@@ -71,14 +96,14 @@ def game_screen(window, mapa, boss):
                 # Plataforma atravessável
                 elif tile_type == PLATF:
                     platforms.add(tile)
-    
-    # Gera o chefão e o adiciona no grupo de sprites
-    mauazinho = Mauazinho(assets[MAUA_IMG], assets[MAUA_BULLET_IMG], assets[MAUA_LASER_IMG], all_sprites)
-    all_sprites.add(mauazinho)
+
+    # Adiciona o boss depois para ficar acima dos tiles
+    all_groups['all_enemies'].add(enemy)
+    all_groups['all_sprites'].add(enemy)
 
     # Adiciona o player depois para garantir que vai ser
     # desenhado por cima
-    all_sprites.add(player)
+    all_groups['all_sprites'].add(player)
 
     # Define o estado inicial como o chefe atual
     state = boss
@@ -101,11 +126,14 @@ def game_screen(window, mapa, boss):
             # **Temporário**
             # Ações de debug para testar mudar de tela e resetar o jogo
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_0:
-                    state = BOSS2
-                elif event.key == pygame.K_r:
+                # DEBUG
+                if event.key == pygame.K_r:
                     state = INIT
-
+                # Se o boss estiver morto e o player apertar enter...
+                elif event.key == pygame.K_RETURN and enemy.alive == False:
+                    print(boss)
+                    if boss == MAUA:
+                        state = BOSS2
             
 
         # Depois de processar os eventos.
@@ -116,9 +144,10 @@ def game_screen(window, mapa, boss):
         window.fill((0, 0, 0))
         all_sprites.draw(window)
 
-        print(mauazinho.state)
-
+        if enemy.alive == False:
+            window.blit(boss_dead_txt, (WIDTH/2 - boss_text_width/2, HEIGHT/2))  # Desenha o texto no centro da tela
         # Depois de desenhar tudo, inverte o display.
         pygame.display.flip()
 
+    print(state)
     return state # Retorna o estado de jogo para mudar a tela

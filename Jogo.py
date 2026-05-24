@@ -13,7 +13,7 @@ while state != QUIT:
     if state == INIT:
         state = init_screen(window)
     # - Tela primeiro chefe
-    elif state == BOSS1:
+    elif state == MAUA:
         state = game_screen(window, MAP, state)
     # - Tela segundo chefe
     elif state == BOSS2:

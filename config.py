@@ -2,9 +2,10 @@
 import pygame
 from os import path
 
-# Inicializa o pygame
+# Inicializa o pygame e seus módulos
 pygame.init()
 pygame.mixer.init()
+pygame.font.init()
 
 # --- Constantes
 # -- Tela
@@ -16,7 +17,7 @@ TITULO = 'OI'   # Título da janela
 # -- Estados de jogo
 # Determinam, principalmente, a tela a ser carregada
 INIT = 0    # Inicializando
-BOSS1 = 1   # Primeiro boss
+MAUA = 1   # Primeiro boss
 BOSS2 = 2   # Segundo boss
 QUIT = 3    # Jogo fecha
 
@@ -55,9 +56,17 @@ PLAYER_IMG = 'player_img'
 BULLET1 = 'Bullet1'
 
 # - Mauazinho 
-MAUA_IMG = PLAYER_IMG
-MAUA_BULLET_IMG = PLAYER_IMG
-MAUA_LASER_IMG = PLAYER_IMG
+MAUA_SIZE = 128
+MAUA_IDLE_IMG = 'maua_idle'
+MAUA_WALK_IMG_0 = 'maua_walk0'
+MAUA_WALK_IMG_1 = 'maua_walk1'
+MAUA_LASER_IMG_0 = 'maua_laser0'
+MAUA_LASER_IMG_1 = 'maua_laser1'
+MAUA_LASER_IMG_2 = 'maua_laser2'
+MAUA_SHOOT_IMG = 'maua_shoot'
+MAUA_BULLET_IMG = BULLET1
+LASER_IMG_0 = 'laser0'
+LASER_IMG_1 =  'laser1'
 
 # Define os tipos de tiles
 BLOCK = 0
@@ -115,6 +124,17 @@ def load_assets(img_dir):
     assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
     assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
     assets[BULLET1] = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert_alpha()
+
+    # Mauazinho
+    assets[MAUA_IDLE_IMG] = pygame.image.load(path.join(img_dir, 'maua_idle.png')).convert_alpha()
+    assets[MAUA_WALK_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_walk0.png')).convert_alpha()
+    assets[MAUA_WALK_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_walk1.png')).convert_alpha()
+    assets[MAUA_LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_laser0.png')).convert_alpha()
+    assets[MAUA_LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_laser1.png')).convert_alpha()
+    assets[MAUA_LASER_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_laser2.png')).convert_alpha()
+    assets[MAUA_SHOOT_IMG] = pygame.image.load(path.join(img_dir, 'maua_shoot.png')).convert_alpha()
+    assets[LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'laser0.png')).convert_alpha()
+    assets[LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'laser1.png')).convert_alpha()
     return assets
 
 # Gera tela principal
