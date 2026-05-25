@@ -8,6 +8,7 @@ def reset_game():
             [], [], [], [], [], [], 0, False, False)
 
 def main():
+    FPS = 60
     (player, boss, pm,
     fall_bullets, horiz_missiles, diag_missiles,
     bolinhas, player_bullets, particles,

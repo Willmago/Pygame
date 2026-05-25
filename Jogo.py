@@ -38,9 +38,11 @@ while state != QUIT:
         state = game_screen(window, MAP, state, hp_imgs)
     # - Tela segundo chefe
     elif state == JARE_GV:
+        FPS = 60
         state = boss_2()
     # - Tela terceiro chefe
     elif state == BOSS3:
+        FPS = 30
         state = boss3_screen(window, hp_imgs)
 
     elif state == WIN:
