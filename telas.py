@@ -41,6 +41,7 @@ win_txt_rect= win_txt.get_rect()
 # Função que coloca os blocos do tileset de acordo
 # com o mapa fornecido
 def map_create(mapa, all_groups, assets):
+    """Cria um mapa com tileset"""
     # Para cada linha...
     for row in range(len(mapa)):
         # ... e coluna:
@@ -64,7 +65,7 @@ def map_create(mapa, all_groups, assets):
 
 # --- Tela de início
 def init_screen(window):
-    
+    """Exibe a tela de início do jogo"""
     assets = load_assets(img_dir)
 
     state = INIT # Define o estado como inicializando para garantir a continuidade da função
@@ -101,7 +102,7 @@ def init_screen(window):
 
 # --- Tela base do jogo
 def game_screen(window, mapa, boss, hp_imgs=None):
-
+    """Exibe a tela do primeiro chefe"""
     #region -- Definições inicias
     # Relógio para FPS
     clock = pygame.time.Clock()
@@ -287,7 +288,7 @@ def defeat_screen(window):
 
 # -- Tela de fim
 def win_screen(window):
-
+    """Exibe a tela final"""
     assets = load_assets(img_dir)
 
     state = WIN # Define o estado como inicializando para garantir a continuidade da função

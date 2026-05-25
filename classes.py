@@ -7,6 +7,7 @@ import random
 # Essa função é passada como o argumento 'collided' da
 # função pygame.sprite.spritecollide ou groupcollide
 def collided(sprite, other):
+    """Checa se as hitbox de dois sprites colidiram"""
     # Checa se as hitbox de dois sprites colidiram
     return sprite.hitbox.colliderect(other.hitbox)
 # De https://gamedev.stackexchange.com/questions/159082/adjusting-collision-hitbox-size-with-pygame
@@ -359,7 +360,7 @@ class Bullet(pygame.sprite.Sprite):
 
 # Função auxiliar para determinar o movimento do jogador
 def player_movement(player, event):
-
+    """Cuida do movimento do player"""
     # Só executa as ações se o player estiver vivo
     if player.alive == True:
         # Se apertou uma tecla...

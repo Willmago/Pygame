@@ -222,6 +222,7 @@ MAP3 = [
 
 # Função para carregar os assets (imagens, sons) a partir dos arquivos locais
 def load_assets(img_dir):
+    """Carrega assets"""
     assets = {}
     #region Player
     assets[PLAYER_IMG] = pygame.image.load(path.join(img_dir, 'raposa_arminha.png')).convert_alpha()
@@ -314,6 +315,7 @@ def load_assets(img_dir):
 
 # Função para carregar e tocar uma música
 def music(name, volume):
+    """Carrega e toca uma música"""
     pygame.mixer.music.load(path.join(snd_dir, name))
     pygame.mixer.music.set_volume(volume)
     pygame.mixer.music.play(-1)
@@ -369,6 +371,7 @@ PHASE3_HP = BOSS_HP_MAX * 1 / 3   # 45
 
 # ===== Carrega sprites =====
 def load_pixil(path):
+    """Carrega imagens do tipo .pixil"""
     import PIL.Image
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
