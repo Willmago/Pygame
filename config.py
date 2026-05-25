@@ -29,12 +29,15 @@ BOSS3 = 4   # Terceiro boss (Rato no robô)
 WIN = 9     # Fim de jogo
 QUIT = 10   # Jogo fecha
 
+#region Variáveis gerais
 # -- Tamanhos
 TILE_SIZE = math.ceil(WIDTH / 27)                   # Tamanho dos tiles
-PLAYER_WIDTH = TILE_SIZE                # Largura do player
-PLAYER_HEIGHT = int(TILE_SIZE * 1.5)    # Altura do player
+PLAYER_WIDTH = TILE_SIZE * 2                # Largura do player
+PLAYER_HEIGHT = (TILE_SIZE * 2)    # Altura do player
 
 # Variáveis do player
+PLAYER_HP = 3
+I_FRAMES = 2 * 1000         # Tempo de invulnerabilidade    
 STILL = 0                   # estado No chão
 JUMPING = 1                 # estado Subindo
 FALLING = 2                 # estado Descendo
@@ -43,10 +46,10 @@ SPEED_X = TILE_SIZE/3       # Velocidade horizontal (menor que a bala)
 
 # - Variáveis do Mauazinho
 MAUA_HP = 200                       # Vida máxima do chefe
-MAUA_SPD = TILE_SIZE * (1/3)        # Velocidade de andar do chefe
+MAUA_SPD = TILE_SIZE * (1/4)        # Velocidade de andar do chefe
 MAUA_BULLET_COUNT = 5               # Número de disparos por leva
 MAUA_BULLET_SPD = 10                # Velocidade horizontal das balas do chefe
-MAUA_BULLET_CD = 250                # Intervalo entre as balas
+MAUA_BULLET_CD = 0.5 * 1000           # Intervalo entre as balas
 MAUA_LASER_POWERUP = 2.5 * 1000     # Tempo para carregar o laser
 MAUA_LASER_DURATION = 1.5 * 1000    # Duração do laser
 
@@ -56,7 +59,7 @@ GRAVITY = 5 # Força da gravidade
 # -- Tiro
 SHOOT_COOLDOWN = 150            # Intervalo mínimo entre tiros (ms) — cadência estilo Cuphead
 BULLET_SPEED = 18               # Velocidade da bala em pixels por frame
-BULLET_WIDTH = TILE_SIZE        # Largura do sprite da bala
+BULLET_WIDTH = TILE_SIZE*2        # Largura do sprite da bala
 BULLET_HEIGHT = BULLET_WIDTH/2  # Altura do sprite da bala
 
 # -- Boss 3 (Rato no robô)
@@ -85,7 +88,9 @@ BOSS_WRENCH       = 'wrench'
 BOSS_NAILS        = 'nails'
 BOSS_GEARS        = 'gears'
 BOSS_PAUSE        = 'pause'
+#endregion
 
+#region assets
 # --- Determina assets
 # Estabelece a pasta que contem as imagens
 img_dir = path.join(path.dirname(__file__), 'assets/img')
@@ -97,10 +102,6 @@ MAUA_IMG        = 'maua_img'
 MAUA_BULLET_IMG = 'maua_bullet_img'
 MAUA_LASER_IMG  = 'maua_laser_img'
 
-# -- Boss 1 (Mauazinho)
-MAUA_SPD        = 4    # Velocidade de caminhada do Mauazinho
-MAUA_BULLET_SPD = 8    # Velocidade da bala do Mauazinho
-MAUA_BULLET_CD  = 800  # Cooldown entre tiros do Mauazinho (ms)
 # --- Imagens
 # - Cores
 BLACK = (0, 0, 0)
@@ -109,10 +110,9 @@ RED = (255, 0, 0)
 PURPLE = (50, 0, 50)
 
 # - Player
-PLAYER_HP = 3
-I_FRAMES = 2 * 1000         # Tempo de invulnerabilidade
 PLAYER_IMG = 'player_img'   # Imagem base
-BULLET1 = 'Bullet1'         # Imagem do tiro
+JUMP_IMG = 'jump_img'
+BULLET1 = 'bullet_img'         # Imagem do tiro
 
 # - Mauazinho 
 MAUA_SIZE = WIDTH / 7
@@ -134,6 +134,7 @@ MAUA_BACKGROUND_IMG = 'maua_background'
 
 # - Cenário
 LOGO_IMG = 'logo'
+WIN_IMG = 'win'
 
 # -- Sons
 SHOOT_SND = 'pew_snd'
@@ -156,7 +157,7 @@ NAIL_IMG        = 'nail_img'
 GEAR_IMG        = 'gear_img'
 WRENCH_SLASH_IMG = 'wrench_slash_img'
 BG_BOSS3        = 'bg_boss3'
-
+#endregion
 
 # -- Define os tipos de tiles
 BLOCK = 0
@@ -176,8 +177,8 @@ MAP = [
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY],
+    [EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY],
+    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
@@ -243,12 +244,12 @@ MAP3 = [
 # Função para carregar os assets (imagens, sons) a partir dos arquivos locais
 def load_assets(img_dir):
     assets = {}
-    assets[PLAYER_IMG] = pygame.image.load(path.join(img_dir, 'hero-single.png')).convert_alpha()
-    assets[BLOCK]      = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
-    assets[PLATF]      = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
-    assets[BULLET1]    = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert_alpha()
-
-    # Mauazinho
+    #region Player
+    assets[PLAYER_IMG] = pygame.image.load(path.join(img_dir, 'raposa_arminha.png')).convert_alpha()
+    assets[JUMP_IMG] = pygame.image.load(path.join(img_dir, 'raposa_pulando.png')).convert_alpha()
+    assets[BULLET1]    = pygame.image.load(path.join(img_dir, 'tiro.png')).convert_alpha()
+    #endregion
+    #region Mauazinho
     assets[MAUA_IDLE_IMG] = pygame.image.load(path.join(img_dir, 'maua_idle.png')).convert_alpha()
     assets[MAUA_WALK_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_walk0.png')).convert_alpha()
     assets[MAUA_WALK_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_walk1.png')).convert_alpha()
@@ -263,22 +264,24 @@ def load_assets(img_dir):
     assets[MAUA_BULLET_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_bullet1.png')).convert_alpha()
     assets[MAUA_BULLET_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_bullet2.png')).convert_alpha()
     assets[MAUA_BACKGROUND_IMG] = pygame.image.load(path.join(img_dir, 'maua_background.png')).convert()
-
-    # - Cenário
+    #endregion
+    #region - Cenário
     assets[LOGO_IMG] = pygame.image.load(path.join(img_dir, 'logo.png')).convert_alpha()
+    assets[WIN_IMG] = pygame.image.load(path.join(img_dir, 'logo.png')).convert_alpha()
     assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
     assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
     assets[DIRTS] = pygame.image.load(path.join(img_dir, 'dirt.png')).convert_alpha()
     assets[STONE] = pygame.image.load(path.join(img_dir, 'stone.png')).convert_alpha()
     assets[CLOUD] = pygame.image.load(path.join(img_dir, 'cloud.png')).convert_alpha()
-
-    # - Sons
+    #endregion
+    #region - Sons
     assets[SHOOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
     assets[MAUA_SHOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot.wav'))
     assets[MAUA_SHOT_SND1] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot2.wav'))
     assets[MAUA_LASER_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_laser.wav'))
     assets[MAUA_WALK_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_walk.flac'))
-
+    #endregion
+    #region Rato Polo
     files = {
         BOSS_IMG:        'Chefao_Poli.png',
         BOSS_WALK_IMG:   'Sprite_lado_andando_perna_esquerda_frente.png',
@@ -327,7 +330,7 @@ def load_assets(img_dir):
                 surf = pygame.Surface((pw, ph))
                 surf.fill((255, 0, 255))
                 assets[key] = surf
-
+    #endregion
     return assets  
 
 # Função para carregar e tocar uma música

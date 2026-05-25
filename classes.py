@@ -44,6 +44,7 @@ class Player(pygame.sprite.Sprite):
         # Construtor da classe ppai (Sprite)
         pygame.sprite.Sprite.__init__(self)
 
+        #region definições iniciais
         # Define o estado autal
         # usado para determinar as ações disponíveis para o jogador
         self.state = STILL # Começa imóvel
@@ -56,7 +57,8 @@ class Player(pygame.sprite.Sprite):
         self.image = self.player_img
         # Detalhes sobre o posicionamento
         self.rect = self.image.get_rect()
-
+        #endregion
+        #region Posição
         # Guarda os grupos de sprites para tratar as colisões
         self.platforms = all_groups['platforms']
         self.blocks = all_groups['blocks']
@@ -77,6 +79,7 @@ class Player(pygame.sprite.Sprite):
         # Essa variável sempre conterá a maior altura alcançada pelo jogador
         # antes de começar a cair
         self.highest_y = self.rect.bottom
+        #endregion
 
         #imagem bala
         self.bulletimg = assets[BULLET1]
@@ -94,9 +97,9 @@ class Player(pygame.sprite.Sprite):
         #grupo inimigos
         self.all_enemies = all_groups['all_enemies']
 
-        # - Vida
+        #region - Vida
         # Hitbox
-        self.hitbox = self.rect.inflate(-10, -10)
+        self.hitbox = self.rect.inflate(-50, -20)
         # Vida inicial
         self.hp = PLAYER_HP
         # Tempo de invulnerabilidade
@@ -111,6 +114,7 @@ class Player(pygame.sprite.Sprite):
         # Vivo ou não. Usado para definir
         # se pode ou não controlá-lo
         self.alive = True
+        #endregion
 
         # Marca o tempo do último tiro (em ms)
         self.last_shot = 0
@@ -783,7 +787,7 @@ class Maua_bullet(pygame.sprite.Sprite):
         self.rect.center = coordinates
 
         # Hitbox
-        self.hitbox = self.rect.inflate(-15, -15)
+        self.hitbox = self.rect.inflate(-30, -30)
 
         # Define a velocidade da bala
         speed = MAUA_BULLET_SPD
