@@ -1181,8 +1181,8 @@ class Boss3(pygame.sprite.Sprite):
 
         # Ataque de pregos
         self.nail_count    = 0
-        self.nail_max      = 5
-        self.nail_interval = 600
+        self.nail_max      = 4
+        self.nail_interval = 1200
         self.last_nail_t   = 0
 
         # Ataque de engrenagens
@@ -1474,7 +1474,10 @@ def draw_boss_sprite(surf, hp, attacking, tick):
     draw_boss_hpbar(surf,hp)
 
 def draw_hud(surf, score, phase):
-    pass  # score e fase removidos
+    surf.blit(font_med.render(f"SCORE: {score}",True,C_BLACK),(22,52))
+    surf.blit(font_med.render(f"SCORE: {score}",True,C_WHITE),(20,50))
+    surf.blit(font_small.render(f"Fase: {phase}",True,C_BLACK),(22,92))
+    surf.blit(font_small.render(f"Fase: {phase}",True,C_YELLOW),(20,90))
 
 def draw_game_over(surf, win):
     ov=pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
@@ -1523,28 +1526,14 @@ class Bolinha:
     def draw(self,surf): surf.blit(bolinha_sprite,(int(self.x),int(self.y)))
 
 class PlayerBullet:
-    SPEED = 14
-    def __init__(self, x, y, d, target_x=None, target_y=None):
-        self.x = float(x); self.y = float(y); self.dir = d; self.alive = True
-        if target_x is not None and target_y is not None:
-            dx = target_x - x; dy = target_y - y
-            dist = max(1, (dx**2 + dy**2) ** 0.5)
-            self.vx = self.SPEED * dx / dist
-            self.vy = self.SPEED * dy / dist
-        else:
-            self.vx = self.SPEED * d; self.vy = 0
-        import math
-        angle = -math.degrees(math.atan2(self.vy, self.vx))
-        base = tiro_sprite if d == 1 else tiro_sprite_flip
-        self.spr = pygame.transform.rotate(base, angle)
-    def update(self):
-        if not self.alive: return  # não ressuscita tiro já morto
-        self.x += self.vx; self.y += self.vy
-        if not (-50 < self.x < WIDTH+50 and -50 < self.y < HEIGHT+50):
-            self.alive = False
-    def rect(self): return pygame.Rect(int(self.x), int(self.y), PBULLET_W, PBULLET_H)
-    def draw(self, surf):
-        if self.alive: surf.blit(self.spr, (int(self.x), int(self.y)))
+    def __init__(self,x,y,d):
+        self.x=float(x); self.y=float(y); self.dir=d; self.alive=True
+        # dir= 1 → vai para direita (tiro normal)
+        # dir=-1 → vai para esquerda (tiro espelhado)
+        self.spr = tiro_sprite if d == 1 else tiro_sprite_flip
+    def update(self): self.x+=12*self.dir; self.alive=-50<self.x<WIDTH+50
+    def rect(self): return pygame.Rect(int(self.x),int(self.y),PBULLET_W,PBULLET_H)
+    def draw(self,surf): surf.blit(self.spr,(int(self.x),int(self.y)))
 
 class Particle:
     def __init__(self,x,y,color):
@@ -1672,14 +1661,13 @@ class Player_2:
         self.x = max(0, min(PLATFORM_X - PLAYER_W - 5, self.x))
         if self.inv_timer>0: self.inv_timer-=1
         if self.shoot_cd>0:  self.shoot_cd-=1
-        self.shooting = pygame.mouse.get_pressed()[0]
+        self.shooting=keys[pygame.K_z] or keys[pygame.K_LCTRL]
     def shoot(self):
-        if self.shoot_cd == 0 and self.shooting:
-            self.shoot_cd = max(1, int(SHOOT_COOLDOWN / (1000 / FPS)))
-            bx = self.x + PLAYER_W if self.facing == 1 else self.x - PBULLET_W
-            by = self.y + PLAYER_H // 2 - PBULLET_H // 2
-            mx, my = pygame.mouse.get_pos()
-            return PlayerBullet(bx, by, self.facing, mx, my)
+        if self.shoot_cd==0 and self.shooting:
+            self.shoot_cd=12
+            bx = self.x+PLAYER_W if self.facing==1 else self.x-PBULLET_W
+            by = self.y+PLAYER_H//2-PBULLET_H//2
+            return PlayerBullet(bx,by,self.facing)
         return None
     def take_hit(self):
         if self.inv_timer==0: self.hp-=1; self.inv_timer=90; return True

@@ -7,8 +7,11 @@ intepretador de python
 W / Espaço  -> Pulo
 A           -> Move para esquerda
 D           -> Move para direita
+S           -> Desce das plataformas
 Mouse Esquerdo -> Atira
 Esc         -> Volta à tela inicial
+
+2 / 3       -> Pulam para os seus chefes respectivos (utilizado para ajudar durante o processo de testar o código)
 
 --- Integrantes
 -> Gustavo C.
@@ -33,17 +36,31 @@ de faculdades do estado de São Paulo.
 - Movimentação básica
 A movimentação básica foi baseada no exemplo "jump_platform" de "pygame-snippets"
 
+-- Tiro:
+- Mecânica -> Baseada inicialmente no handout do pygame e posteriormente auxílio de IA
+- Sprite -> Auxílio de IA
+
+-- Vidas/colisões:
+- Mecânica -> 
+- Sprites -> Auxílio de IA
+
 - Fase "Mauazinho"
 Feito por Willian
 
-- Fase "Jacaré da FGV"
+-- Fase "Jacaré da FGV"
 Feito por Gustavo
 
 - Fase "Rato da Poli USP"
 Feito por Henrique
 
-- Tela de início e de fim
-Feito por Willian
+- Sprites "rato poli usp"
+Feitos por Henrique com auxílio de IA
+
+- Ataques e objetos "rato poli usp"
+Feitos por Henrique com auxílio de IA
+
+- Ambiente e suas mecânicas "rato poli usp"
+Feito por Henrique com auxílio de IA
 
 -- Visual
 - Sprites da raposa (protagonista)
