@@ -12,12 +12,16 @@ class Tile(pygame.sprite.Sprite):
         # Construtor da classe pai (Sprite)
         pygame.sprite.Sprite.__init__(self)
 
-        # Aumenta o tamanho do tile
-        tile_img = pygame.transform.scale(tile_img, (TILE_SIZE, TILE_SIZE))
+        if tile_img is None:
+            # Plataforma invisível: surface transparente
+            self.image = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+            self.image.fill((0, 0, 0, 0))
+        else:
+            # Aumenta o tamanho do tile
+            tile_img = pygame.transform.scale(tile_img, (TILE_SIZE, TILE_SIZE))
+            self.image = tile_img
 
-        # Define o próprio sprite
-        self.image = tile_img
-        # Detalhes sibre o posicionamento
+        # Detalhes sobre o posicionamento
         self.rect = self.image.get_rect()
 
         # Posiciona o tile
@@ -537,3 +541,408 @@ class Maua_laser(pygame.sprite.Sprite):
         if elapsed_time > self.duration:
             # Apaga o laser
             self.kill()
+
+
+# ===========================================================================
+# BOSS 3 — Rato no Robô
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Mine — fica estática no chão; explode ao ser acertada por bala do player
+# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Explosion — sprite temporário que aparece quando uma mina explode
+# ---------------------------------------------------------------------------
+class Explosion(pygame.sprite.Sprite):
+
+    def __init__(self, explosion_img, cx, cy):
+        pygame.sprite.Sprite.__init__(self)
+        self.image      = pygame.transform.scale(explosion_img, (EXPLOSION_SIZE, EXPLOSION_SIZE)).convert_alpha()
+        self.rect       = self.image.get_rect(center=(cx, cy))
+        self._born      = pygame.time.get_ticks()
+
+    def update(self):
+        if pygame.time.get_ticks() - self._born >= EXPLOSION_DURATION:
+            self.kill()
+
+
+class Mine(pygame.sprite.Sprite):
+
+    def __init__(self, mine_img, explosion_img, x, y, all_sprites):
+        pygame.sprite.Sprite.__init__(self)
+        self.image         = pygame.transform.scale(mine_img, (MINE_SIZE, MINE_SIZE)).convert_alpha()
+        self.rect          = self.image.get_rect()
+        self.rect.midbottom = (x, y)
+        self._explosion_img = explosion_img
+        self._all_sprites   = all_sprites
+
+    def explode(self):
+        """Cria o sprite de explosão centralizado na mina e remove a mina."""
+        exp = Explosion(self._explosion_img, self.rect.centerx, self.rect.centery)
+        self._all_sprites.add(exp)
+        self.kill()
+
+
+# ---------------------------------------------------------------------------
+# NailProjectile — prego disparado pelo boss, voa horizontalmente
+# ---------------------------------------------------------------------------
+class NailProjectile(pygame.sprite.Sprite):
+
+    def __init__(self, nail_img, x, y, vx, vy, blocks):
+        pygame.sprite.Sprite.__init__(self)
+        self.blocks = blocks
+        img = pygame.transform.scale(nail_img, (NAIL_WIDTH, NAIL_HEIGHT))
+        # Rotaciona o sprite na direção do disparo
+        import math
+        angle = -math.degrees(math.atan2(vy, vx))
+        img   = pygame.transform.rotate(img, angle)
+        self.image = img.convert_alpha()
+        self.rect  = self.image.get_rect(center=(x, y))
+        self.vx    = vx
+        self.vy    = vy
+
+    def update(self):
+        self.rect.x += int(self.vx)
+        self.rect.y += int(self.vy)
+        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.top > HEIGHT:
+            self.kill()
+            return
+        if pygame.sprite.spritecollide(self, self.blocks, False):
+            self.kill()
+
+
+# ---------------------------------------------------------------------------
+# GearProjectile — engrenagem lançada para cima em arco, cai por gravidade
+# ---------------------------------------------------------------------------
+class GearProjectile(pygame.sprite.Sprite):
+
+    def __init__(self, gear_img, x, y, vx, blocks):
+        pygame.sprite.Sprite.__init__(self)
+        self.blocks     = blocks
+        self.base_image = pygame.transform.scale(gear_img, (GEAR_SIZE, GEAR_SIZE)).convert_alpha()
+        self.image      = self.base_image.copy()
+        self.rect       = self.image.get_rect(center=(x, y))
+        self.vx         = vx
+        self.vy         = -GEAR_THROW_SPEED
+        self.pos_x      = float(x)
+        self.pos_y      = float(y)
+        self.angle      = 0.0
+
+    def update(self):
+        self.vy    += GRAVITY * 0.5
+        self.pos_x += self.vx
+        self.pos_y += self.vy
+        self.angle  = (self.angle + 6) % 360
+        self.image  = pygame.transform.rotate(self.base_image, self.angle)
+        self.rect   = self.image.get_rect(center=(int(self.pos_x), int(self.pos_y)))
+        if self.pos_y > HEIGHT + 50 or self.pos_x < -50 or self.pos_x > WIDTH + 50:
+            self.kill()
+            return
+        if pygame.sprite.spritecollide(self, self.blocks, False):
+            self.kill()
+
+
+# ---------------------------------------------------------------------------
+# Boss3 — Rato no robô: máquina de estados completa
+# ---------------------------------------------------------------------------
+class Boss3(pygame.sprite.Sprite):
+
+    def __init__(self, boss_img, boss_walk_img, boss_nail_img, boss_wrench_img, boss_dead_img, boss_gear_img, x, y, blocks, platforms,
+                 nail_img, gear_img, mine_img, explosion_img, wrench_slash_img,
+                 enemy_projectiles, mines_group, all_sprites):
+        pygame.sprite.Sprite.__init__(self)
+
+        # --- Sprites por estado ---
+        # Idle / pausa
+        img_idle              = pygame.transform.scale(boss_img, (BOSS3_WIDTH, BOSS3_HEIGHT))
+        self.img_idle_r       = img_idle
+        self.img_idle_l       = pygame.transform.flip(img_idle, True, False)
+
+        # Andando: sprite único
+        img_walk        = pygame.transform.scale(boss_walk_img, (BOSS3_WIDTH, BOSS3_HEIGHT))
+        self.walk_img_r = img_walk
+        self.walk_img_l = pygame.transform.flip(img_walk, True, False)
+
+        # Atirando prego
+        img_nail              = pygame.transform.scale(boss_nail_img, (BOSS3_WIDTH, BOSS3_HEIGHT))
+        self.img_nail_r       = img_nail
+        self.img_nail_l       = pygame.transform.flip(img_nail, True, False)
+
+        # Golpe da chave
+        img_wrench            = pygame.transform.scale(boss_wrench_img, (BOSS3_WIDTH, BOSS3_HEIGHT))
+        self.img_wrench_r     = img_wrench
+        self.img_wrench_l     = pygame.transform.flip(img_wrench, True, False)
+
+        # Flash (telegraph) — tinta vermelha sobre o sprite de chave
+        self.img_wrench_flash_r = self._tint(self.img_wrench_r.copy(), (220, 60, 60))
+        self.img_wrench_flash_l = self._tint(self.img_wrench_l.copy(), (220, 60, 60))
+
+        # Derrotado
+        dead_w = int(BOSS3_WIDTH * 1.4)
+        dead_h = int(BOSS3_HEIGHT * 0.6)
+        self.img_dead = pygame.transform.scale(boss_dead_img, (dead_w, dead_h))
+
+        # Jogando engrenagens
+        img_gear_atk        = pygame.transform.scale(boss_gear_img, (BOSS3_WIDTH, BOSS3_HEIGHT))
+        self.img_gear_r     = img_gear_atk
+        self.img_gear_l     = pygame.transform.flip(img_gear_atk, True, False)
+
+        self.image = self.img_idle_r
+        self.rect  = self.image.get_rect()
+        self.rect.midbottom = (x, y)
+
+        # Física
+        self.blocks    = blocks
+        self.platforms = platforms
+        self.pos_x     = float(self.rect.x)
+        self.pos_y     = float(self.rect.y)
+        self.direction = -1          # começa virado para a esquerda (encarando o player)
+        self.speedy    = 0.0
+
+        # Vida
+        self.hp     = BOSS3_HP
+        self.max_hp = BOSS3_HP
+        self.alive  = True
+
+        # Assets de projéteis e minas
+        self.nail_img      = nail_img
+        self.gear_img      = gear_img
+        self.mine_img      = mine_img
+        self.explosion_img = explosion_img
+
+        # Sprite do golpe da chave escalado para cada direção
+        slash_r              = pygame.transform.scale(wrench_slash_img, (WRENCH_REACH, WRENCH_REACH)).convert_alpha()
+        self._wrench_slash_r = slash_r
+        self._wrench_slash_l = pygame.transform.flip(slash_r, True, False)
+
+        # Grupos
+        self.enemy_projectiles = enemy_projectiles
+        self.mines_group       = mines_group
+        self.all_sprites       = all_sprites
+        self.player_ref        = None  # setado após criação do player
+
+        # Máquina de estados
+        self.state        = BOSS_WALKING
+        self.state_timer  = pygame.time.get_ticks()
+        # Primeiro alvo: canto esquerdo
+        self.walk_target  = BOSS3_WIDTH // 2 + 20
+
+        # Parada mid-walk
+        self.walk_start_time   = pygame.time.get_ticks()
+        self.next_midwalk_stop = random.randint(1500, 3000)
+
+        # Minas
+        self.last_mine_x   = -999
+        self.mine_interval = 180
+
+        # Ataque de pregos
+        self.nail_count    = 0
+        self.nail_max      = 5
+        self.nail_interval = 600
+        self.last_nail_t   = 0
+
+        # Ataque de engrenagens
+        self.gear_count    = 0
+        self.gear_max      = 6
+        self.gear_interval = 350
+        self.last_gear_t   = 0
+
+        # Flash do telegraph
+        self.flash_visible  = True
+        self.flash_timer    = 0
+        self.flash_interval = 200
+
+    @staticmethod
+    def _tint(surface, color):
+        tinted = surface.copy()
+        tinted.fill(color, special_flags=pygame.BLEND_RGB_MULT)
+        return tinted
+
+    def take_damage(self, amount=1):
+        self.hp = max(0, self.hp - amount)
+        if self.hp == 0:
+            self.alive = False
+            # Troca para sprite de derrotado e reposiciona no chão
+            old_bottom    = self.rect.bottom
+            self.image    = self.img_dead
+            self.rect     = self.image.get_rect()
+            self.rect.bottom = old_bottom
+            # Não chama kill() ainda — fica visível até a tela de vitória
+
+    def update(self):
+        if not self.alive:
+            return  # sprite de derrotado já foi definido em take_damage
+
+        now     = pygame.time.get_ticks()
+        elapsed = now - self.state_timer
+
+        # Gravidade — boss fica no chão (colide com blocks e platforms invisíveis)
+        self.speedy += GRAVITY
+        self.pos_y  += self.speedy
+        self.rect.y  = int(self.pos_y)
+        ground_hits = list(pygame.sprite.spritecollide(self, self.blocks, False)) +                       list(pygame.sprite.spritecollide(self, self.platforms, False))
+        for c in ground_hits:
+            if self.speedy > 0:
+                self.rect.bottom = c.rect.top
+                self.pos_y       = float(self.rect.y)
+                self.speedy      = 0
+                break
+
+        # --- Estado: caminhando
+        if self.state == BOSS_WALKING:
+            self._walk()
+            self._try_drop_mine()
+            if abs(self.rect.x - self.walk_target) < BOSS3_SPEED + 2:
+                self.rect.x      = self.walk_target
+                self.pos_x       = float(self.rect.x)
+                self.state       = BOSS_PAUSE
+                self.state_timer = now
+            elif now - self.walk_start_time >= self.next_midwalk_stop:
+                self.state       = BOSS_PAUSE
+                self.state_timer = now
+
+        # --- Pausa antes do ataque
+        elif self.state == BOSS_PAUSE:
+            self._set_sprite()
+            if elapsed >= ATTACK_COOLDOWN // 2:
+                self._choose_attack(now)
+
+        # --- Telegraph da chave (pisca vermelho)
+        elif self.state == BOSS_TELEGRAPH:
+            if now - self.flash_timer > self.flash_interval:
+                self.flash_visible = not self.flash_visible
+                self.flash_timer   = now
+            self._set_sprite(flash=not self.flash_visible)
+            if elapsed >= WRENCH_TELEGRAPH:
+                self.state       = BOSS_WRENCH
+                self.state_timer = now
+                self.flash_visible = True
+
+        # --- Golpe da chave (hitbox ativo)
+        elif self.state == BOSS_WRENCH:
+            self._set_sprite()
+            if elapsed >= WRENCH_ACTIVE:
+                self._end_attack(now)
+
+        # --- Ataque de pregos
+        elif self.state == BOSS_NAILS:
+            self._set_sprite()
+            if now - self.last_nail_t >= self.nail_interval:
+                self._shoot_nail()
+                self.last_nail_t = now
+                self.nail_count += 1
+            if self.nail_count >= self.nail_max:
+                self._end_attack(now)
+
+        # --- Ataque de engrenagens
+        elif self.state == BOSS_GEARS:
+            self._set_sprite()
+            if now - self.last_gear_t >= self.gear_interval:
+                self._throw_gear()
+                self.last_gear_t = now
+                self.gear_count += 1
+            if self.gear_count >= self.gear_max:
+                self._end_attack(now)
+
+    # --- Helpers internos ---
+
+    def _walk(self):
+        dx = self.walk_target - self.rect.x
+        if dx > 0:
+            self.direction = 1
+            self.pos_x    += BOSS3_SPEED
+        else:
+            self.direction = -1
+            self.pos_x    -= BOSS3_SPEED
+        self.rect.x = int(self.pos_x)
+        self.image = self.walk_img_r if self.direction == 1 else self.walk_img_l
+
+    def _try_drop_mine(self):
+        if abs(self.rect.centerx - self.last_mine_x) >= self.mine_interval:
+            mine = Mine(self.mine_img, self.explosion_img,
+                        self.rect.centerx, self.rect.bottom, self.all_sprites)
+            self.mines_group.add(mine)
+            self.all_sprites.add(mine)
+            self.last_mine_x = self.rect.centerx
+
+    def _choose_attack(self, now):
+        attack = random.choice([BOSS_TELEGRAPH, BOSS_NAILS, BOSS_GEARS])
+        self.state        = attack
+        self.state_timer  = now
+        self.flash_timer  = now
+        self.nail_count   = 0
+        self.gear_count   = 0
+        self.last_nail_t  = now
+        self.last_gear_t  = now
+        # Vira para encarar o centro da tela
+        self.direction = -1 if self.rect.centerx > WIDTH // 2 else 1
+
+    def _end_attack(self, now):
+        if self.rect.centerx < WIDTH // 2:
+            self.walk_target = WIDTH - BOSS3_WIDTH - 20
+        else:
+            self.walk_target = BOSS3_WIDTH // 2 + 20
+        self.state             = BOSS_WALKING
+        self.state_timer       = now
+        self.walk_start_time   = now
+        self.next_midwalk_stop = random.randint(1500, 3000)
+
+    def _shoot_nail(self):
+        ox = self.rect.right if self.direction == 1 else self.rect.left
+        oy = self.rect.centery - 20
+        # Mira no jogador se disponível
+        if self.player_ref is not None:
+            px = self.player_ref.rect.centerx
+            py = self.player_ref.rect.centery
+            dx = px - ox
+            dy = py - oy
+            dist = max(1, (dx**2 + dy**2) ** 0.5)
+            vx = NAIL_SPEED * dx / dist
+            vy = NAIL_SPEED * dy / dist
+        else:
+            vx = NAIL_SPEED * self.direction
+            vy = 0
+        nail = NailProjectile(self.nail_img, ox, oy, vx, vy, self.blocks)
+        self.enemy_projectiles.add(nail)
+        self.all_sprites.add(nail)
+
+    def _throw_gear(self):
+        spread = WIDTH // (self.gear_max + 1)
+        tx = spread * (self.gear_count + 1)
+        ox = self.rect.centerx
+        vx = (tx - ox) / 30
+        gear = GearProjectile(self.gear_img, ox, self.rect.top - 20, vx, self.blocks)
+        self.enemy_projectiles.add(gear)
+        self.all_sprites.add(gear)
+
+    def _set_sprite(self, flash=False):
+        right = (self.direction == 1)
+        if self.state == BOSS_NAILS:
+            new_img = self.img_nail_r  if right else self.img_nail_l
+        elif self.state in (BOSS_WRENCH, BOSS_TELEGRAPH):
+            if flash:
+                new_img = self.img_wrench_flash_r if right else self.img_wrench_flash_l
+            else:
+                new_img = self.img_wrench_r if right else self.img_wrench_l
+        elif self.state == BOSS_GEARS:
+            new_img = self.img_gear_r if right else self.img_gear_l
+        else:
+            new_img = self.img_idle_r if right else self.img_idle_l
+        # Troca apenas a imagem — rect permanece o mesmo para não deslocar o boss
+        self.image = new_img
+
+    def get_wrench_slash_img(self):
+        if self.state != BOSS_WRENCH:
+            return None
+        return self._wrench_slash_r if self.direction == 1 else self._wrench_slash_l
+
+    def get_wrench_rect(self):
+        """Retorna o hitbox da chave quando o golpe está ativo, ou None."""
+        if self.state != BOSS_WRENCH:
+            return None
+        if self.direction == 1:
+            return pygame.Rect(self.rect.right, self.rect.top + 20,
+                               WRENCH_REACH, self.rect.height // 2)
+        else:
+            return pygame.Rect(self.rect.left - WRENCH_REACH, self.rect.top + 20,
+                               WRENCH_REACH, self.rect.height // 2)

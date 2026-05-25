@@ -1,6 +1,11 @@
 # --- Importa e inicia pacotes
 from config import *
 from classes import *
+from fase_boss3 import boss3_screen
+
+# Garante que BOSS3 está definido mesmo que o config.py seja uma versão antiga
+if 'BOSS3' not in dir():
+    BOSS3 = 4
 
 # Define a fonte padrão
 init_font = pygame.font.SysFont(None, 48)
@@ -23,7 +28,10 @@ def init_screen(window):
 
         # - Verifica se o usuário apertou alguma tecla...
         if event.type == pygame.KEYDOWN:
-            state = BOSS1 # ... e inicia o jogo
+            if event.key in (pygame.K_3, pygame.K_KP3, pygame.K_F3):
+                state = BOSS3   # Tecla 3 (ou F3, ou numpad 3) → boss do rato
+            else:
+                state = BOSS1   # Qualquer outra tecla → inicia o jogo normalmente
 
     window.fill((255, 0, 255))                                  # Preence a tela de Roxo
     window.blit(init_text, (WIDTH/2 - text_width/2, HEIGHT/2))  # Desenha o texto no centro da tela
@@ -103,6 +111,8 @@ def game_screen(window, mapa, boss):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_0:
                     state = BOSS2
+                elif event.key == pygame.K_3:
+                    state = BOSS3
                 elif event.key == pygame.K_r:
                     state = INIT
 

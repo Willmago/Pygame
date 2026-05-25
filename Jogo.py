@@ -2,6 +2,7 @@
 import pygame
 from config import *
 from telas import init_screen, game_screen
+from fase_boss3 import boss3_screen
 
 # --- Loop geral do jogo
 while state != QUIT:
@@ -18,5 +19,8 @@ while state != QUIT:
     # - Tela segundo chefe
     elif state == BOSS2:
         state = game_screen(window, MAP2, state)
+    # - Tela terceiro chefe
+    elif state == BOSS3:
+        state = boss3_screen(window)
 
 pygame.quit()
