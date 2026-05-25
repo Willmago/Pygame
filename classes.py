@@ -973,8 +973,8 @@ class Maua_laser(pygame.sprite.Sprite):
             self.kill()
 
 # Desenha a barra de vida do boss no topo da tela.
-def draw_boss_hp(surface, boss):
-    
+def draw_boss_hp(surface, boss, name):
+    """Desenha a barra de vida do boss no topo da tela."""
     bar_w = 500
     bar_h = 22
     x     = (WIDTH - bar_w) // 2
@@ -984,7 +984,7 @@ def draw_boss_hp(surface, boss):
     pygame.draw.rect(surface, (220, 50, 50),   (x, y, int(bar_w * ratio), bar_h), border_radius=5)
     pygame.draw.rect(surface, (255, 255, 255), (x, y, bar_w, bar_h), 2,           border_radius=5)
     font  = pygame.font.SysFont(None, 26)
-    label = font.render('CHEFÃO', True, (255, 255, 255))
+    label = font.render(name, True, (255, 255, 255))
     surface.blit(label, (x + bar_w // 2 - label.get_width() // 2, y + 2))
 
 # ===========================================================================

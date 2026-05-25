@@ -1,22 +1,7 @@
 # --- Tela do Boss 3: Rato no Robô
 import pygame, math
 from config import *
-from classes import Tile, Player, Boss3, player_movement
-
-
-def draw_boss_hp(surface, boss):
-    """Desenha a barra de vida do boss no topo da tela."""
-    bar_w = 500
-    bar_h = 22
-    x     = (WIDTH - bar_w) // 2
-    y     = 18
-    ratio = boss.hp / boss.max_hp
-    pygame.draw.rect(surface, (60, 20, 20),    (x, y, bar_w, bar_h),              border_radius=5)
-    pygame.draw.rect(surface, (220, 50, 50),   (x, y, int(bar_w * ratio), bar_h), border_radius=5)
-    pygame.draw.rect(surface, (255, 255, 255), (x, y, bar_w, bar_h), 2,           border_radius=5)
-    font  = pygame.font.SysFont(None, 26)
-    label = font.render('CHEFÃO', True, (255, 255, 255))
-    surface.blit(label, (x + bar_w // 2 - label.get_width() // 2, y + 2))
+from classes import Tile, Player, Boss3, player_movement, draw_boss_hp
 
 
 def draw_player_hp(surface, player, hp_imgs):
@@ -199,7 +184,7 @@ def boss3_screen(window, hp_imgs):
                 window.blit(slash_img, wrench_rect.topleft)
 
         if boss.alive:
-            draw_boss_hp(window, boss)
+            draw_boss_hp(window, boss, "Ratusp Poli")
 
         draw_player_hp(window, player, hp_imgs)
 
@@ -211,7 +196,12 @@ def boss3_screen(window, hp_imgs):
             state = WIN
 
         if not player.alive:
-            state = DEFEAT
+            txt = font_big.render('VOCÊ MORREU!', True, (220, 50, 50))
+            window.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 40))
+            pygame.display.flip()
+            pygame.time.wait(2000)
+            state = INIT
+            music('intro.mp3', 0.2)
 
         pygame.display.flip()
 
