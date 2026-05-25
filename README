@@ -1,4 +1,4 @@
---- Como executa o jogo
+--- Como executar o jogo
 
 Para executar o jogo, abra o arquivo "jogo.py" em um
 intepretador de python
@@ -17,8 +17,8 @@ Esc         -> Volta à tela inicial
 
 --- Vídeo exemplo
 
-Abaixo segue um vídeo do jogo funcionando:
-
+Abaixo segue o link para um vídeo do jogo funcionando:
+https://youtu.be/WKYOd1gIEuk
 
 --- Explicação do jogo
 
@@ -26,31 +26,43 @@ Abaixo segue um vídeo do jogo funcionando:
 enfrentar mascotes de diversas faculdades na tentativa de ganhar o
 título de "melhor mascote".
     É um jogo de plataforma em que player pode atirar em seus inimigos.
-Cada fase é um chefe com ataques diferentes, inspirado em mascotes
-de faculdades da cidade de São Paulo.
+Cada fase é um chefe com ataques diferentes inspirado em mascotes
+de faculdades do estado de São Paulo.
 
 --- Sobre o desenvolvimento
--- Movimentação básica
+- Movimentação básica
 A movimentação básica foi baseada no exemplo "jump_platform" de "pygame-snippets"
 
--- Fase "Jacaré da FGV"
+- Fase "Mauazinho"
+Feito por Willian
+
+- Fase "Jacaré da FGV"
 Feito por Gustavo
 
--- Fase "Rato da Poli USP"
+- Fase "Rato da Poli USP"
 Feito por Henrique
 
--- Fase "Mauazinho"
+- Tela de início e de fim
 Feito por Willian
 
 -- Visual
 - Sprites da raposa (protagonista)
-
+Feitos por Gustavo em pixilart
 
 - Sprites do "Mauazinho"
-Feitos por Willian
+Feitos por Willian em pixilart
 
 - Tileset da fase "Mauazinho"
-Feito por Willian
+Feito por Willian em pixilart
+
+- Sprites do "Jaré da GV"
+Feitos por Gustavo em pixilart
+
+- Background do "Jaré da GV"
+Feito em ChatGPT
+
+- Sprites e Background "Rato Poli USP"
+Feito em ChatGPT
 
 -- Audio
 - Música da intro

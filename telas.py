@@ -2,6 +2,7 @@
 from config import *
 from classes import *
 from fase_boss3 import boss3_screen, draw_player_hp
+from boss_2 import draw_boss_hp
 
 # Garante que BOSS3 está definido mesmo que o config.py seja uma versão antiga
 if 'BOSS3' not in dir():
@@ -126,15 +127,11 @@ def game_screen(window, mapa, boss, hp_imgs=None):
         'all_enemies': all_enemies
     }
 
+    # Spawna o boss Mauazinho
+    enemy = Mauazinho(assets, all_groups)
+    # Configura a música do boss
     boss_music = 'maua_theme.mp3'
     music_vol = 0.2
-    # Gera o chefão de acordo com a tela
-    if boss == MAUA:
-        # Spawna o boss Mauazinho
-        enemy = Mauazinho(assets, all_groups)
-        # Configura a música do boss
-        boss_music = 'maua_theme.mp3'
-        music_vol = 0.2
     
 
     # Gera o player
@@ -218,7 +215,7 @@ def game_screen(window, mapa, boss, hp_imgs=None):
         # Se estiver vivo...
         else:
             # Desenha a barra de vida dele
-            draw_boss_hp(window, enemy)
+            draw_boss_hp(window, enemy, 'Mauazinho')
 
         # Se o player estiver morto...
         if player.alive == False:
