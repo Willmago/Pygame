@@ -4,6 +4,13 @@ import math
 from config import *
 import random
 
+# Essa função é passada como o argumento 'collided' da
+# função pygame.sprite.spritecollide ou groupcollide
+def collided(sprite, other):
+    # Checa se as hitbox de dois sprites colidiram
+    return sprite.hitbox.colliderect(other.hitbox)
+# De https://gamedev.stackexchange.com/questions/159082/adjusting-collision-hitbox-size-with-pygame
+
 # Classe que representa os blocos do cenário
 class Tile(pygame.sprite.Sprite):
 
@@ -32,7 +39,7 @@ class Tile(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
 
     # Construtor da classe
-    def __init__(self, player_img, row, colum, platforms, blocks, all_bullets, assets, all_sprites):
+    def __init__(self, player_img, row, colum, assets, all_groups):
 
         # Construtor da classe ppai (Sprite)
         pygame.sprite.Sprite.__init__(self)
@@ -51,8 +58,8 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         # Guarda os grupos de sprites para tratar as colisões
-        self.platforms = platforms
-        self.blocks = blocks
+        self.platforms = all_groups['platforms']
+        self.blocks = all_groups['blocks']
 
         # Posiciona o personagem
         self.rect.x = colum * TILE_SIZE
@@ -74,11 +81,36 @@ class Player(pygame.sprite.Sprite):
         #imagem bala
         self.bulletimg = assets[BULLET1]
 
+        #som bala
+        self.bullet_snd = assets[SHOOT_SND]
+        self.bullet_snd.set_volume(0.08)
+
         #dicionário assets
-        self.all_sprites = all_sprites
+        self.all_sprites = all_groups['all_sprites']
 
         #grupo balas
-        self.all_bullets = all_bullets
+        self.all_bullets = all_groups['all_bullets']
+
+        #grupo inimigos
+        self.all_enemies = all_groups['all_enemies']
+
+        # - Vida
+        # Hitbox
+        self.hitbox = self.rect.inflate(-10, -10)
+        # Vida inicial
+        self.hp = PLAYER_HP
+        # Tempo de invulnerabilidade
+        self.i_frames = I_FRAMES
+        # Momento do último hit. Usado
+        # para determinar se pode ou não
+        # levar dano
+        self.last_hit = 0
+        # Controle da vulnerabilidade do
+        # personagem
+        self.invincible = False
+        # Vivo ou não. Usado para definir
+        # se pode ou não controlá-lo
+        self.alive = True
 
         # Marca o tempo do último tiro (em ms)
         self.last_shot = 0
@@ -86,8 +118,12 @@ class Player(pygame.sprite.Sprite):
     # Método que atualiza a posição do personagem
     def update(self):
 
+        # Atualiza a posição da hitbox
+        self.hitbox.center = self.rect.center
+        
         # Dispara enquanto o botão esquerdo do mouse estiver pressionado
-        if pygame.mouse.get_pressed()[0]:
+        # E o player estiver vivo
+        if pygame.mouse.get_pressed()[0] and self.alive == True:
             self.shoot()
         
         # Tenta andar em y
@@ -177,7 +213,39 @@ class Player(pygame.sprite.Sprite):
             elif self.speedx < 0:
                 self.rect.left = collision.rect.right
 
+        # Pega o momento atual
+        now = pygame.time.get_ticks()
+        # Vê o tempo desde o último hit
+        elapsed = now - self.last_hit
+        # Se o tempo for maior que o de invulnerabilidade
+        if elapsed > self.i_frames:
+            
+            self.invincible = False
+            # Veficia colisões com inimigos
+            hits = pygame.sprite.spritecollide(self, self.all_enemies, False, collided)
+            # se tiver sido acertado e não estiver morto...
+            if len(hits) != 0 and self.alive == True:
+                
+                # Perde vida
+                self.hp -= 1
+                # atualiza o momento do último hit
+                self.last_hit = now
+                # determina que o player está invulnerável
+                self.invincible = True
 
+        # Se a vida for zerada...
+        if self.hp <= 0:
+            # Player está morto
+            self.alive = False
+            # garante que ele não vai se mover em x
+            self.speedx = 0
+
+        if self.invincible == True:
+            alpha = 100 * math.sin(now * (25/1000)) + 155
+            self.image.set_alpha(alpha)
+        else:
+            self.image.set_alpha(255)
+        
     # Jogador atira em direção ao cursor do mouse
     def shoot(self):
         # Verifica se pode atirar
@@ -202,25 +270,27 @@ class Player(pygame.sprite.Sprite):
                 self.bulletimg,
                 origin_x, origin_y,
                 mouse_x, mouse_y,
-                self.blocks, self.platforms
+                self.blocks
             )
             self.all_bullets.add(new_bullet)
             self.all_sprites.add(new_bullet)
-     
 
+            
+            self.bullet_snd.play()
+     
     # Método que faz o personagem pular
     def jump(self):
         # Só pode pular se não estiver pulando ou caindo
         if self.state == STILL:
             self.speedy -= JUMP_SIZE
             self.state = JUMPING
-
+    
 class Bullet(pygame.sprite.Sprite):
     # Construtor da classe.
     # origin_x, origin_y: ponto de saída do tiro (já calculado pelo Player)
     # target_x, target_y: posição do cursor (alvo)
     # blocks: grupo de blocos sólidos do mapa para colisão
-    def __init__(self, bullet_img, origin_x, origin_y, target_x, target_y, blocks, platforms):
+    def __init__(self, bullet_img, origin_x, origin_y, target_x, target_y, blocks):
         pygame.sprite.Sprite.__init__(self)
 
         # Guarda apenas os blocos sólidos para colisão (plataformas são atravessáveis)
@@ -239,6 +309,9 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(bullet_img_scaled, angulo).convert_alpha()
         self.rect = self.image.get_rect(center=(origin_x, origin_y))
 
+        # Hitbox
+        self.hitbox = self.rect.inflate(-20, -20)
+
         # Posição em float para movimento suave e preciso
         self.pos_x = float(origin_x)
         self.pos_y = float(origin_y)
@@ -249,6 +322,9 @@ class Bullet(pygame.sprite.Sprite):
         self.pos_y += self.vy
         self.rect.centerx = int(self.pos_x)
         self.rect.centery = int(self.pos_y)
+
+        # Atualiza a hitbox
+        self.hitbox.center = self.rect.center
 
         # Destrói ao sair da tela
         if self.rect.x < 0 or self.rect.x > WIDTH or self.rect.y < 0 or self.rect.y > HEIGHT:
@@ -263,77 +339,145 @@ class Bullet(pygame.sprite.Sprite):
 # Função auxiliar para determinar o movimento do jogador
 def player_movement(player, event):
 
-    # Se apertou uma tecla...
-    if event.type == pygame.KEYDOWN:
-        # Dependendo da tecla, altera o estado do jogador
-        # - Movimento para a esquerda
-        if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-            player.speedx -= SPEED_X
-        # - Movimento para a direita
-        elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-            player.speedx += SPEED_X
-        # - Pulo
-        elif event.key == pygame.K_UP or event.key == pygame.K_w or event.key == pygame.K_SPACE:
-            player.jump()
+    # Só executa as ações se o player estiver vivo
+    if player.alive == True:
+        # Se apertou uma tecla...
+        if event.type == pygame.KEYDOWN:
+            # Dependendo da tecla, altera o estado do jogador
+            # - Movimento para a esquerda
+            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                player.speedx -= SPEED_X
+            # - Movimento para a direita
+            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                player.speedx += SPEED_X
+            # - Pulo
+            elif event.key == pygame.K_UP or event.key == pygame.K_w or event.key == pygame.K_SPACE:
+                player.jump()
 
-    # Verifica se soltou alguma tecla.
-    if event.type == pygame.KEYUP:
-        # Dependendo da tecla, altera o estado do jogador.
-        # - Para movimento para esquerda
-        if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-            player.speedx += SPEED_X
-        # - Para movimento para a direita
-        elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-            player.speedx -= SPEED_X
+        # Verifica se soltou alguma tecla.
+        if event.type == pygame.KEYUP:
+            # Dependendo da tecla, altera o estado do jogador.
+            # - Para movimento para esquerda
+            if event.key == pygame.K_LEFT or event.key == pygame.K_a:
+                player.speedx += SPEED_X
+            # - Para movimento para a direita
+            elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
+                player.speedx -= SPEED_X
 
+# Classe que representa o chefe "mauazinho"
 class Mauazinho(pygame.sprite.Sprite):
-    def __init__(self, img, bullet_img, laser_img, all_sprites):
+    def __init__(self, assets, all_groups):
         # Construtor da classe pai (Sprite)
         pygame.sprite.Sprite.__init__(self)
 
         # Salva o grupo de sprites como um atributo
-        self.all_sprites = all_sprites
+        self.all_sprites = all_groups['all_sprites']
+        self.all_enemies = all_groups['all_enemies']
+        self.all_bullets = all_groups['all_bullets']
 
-        # -- Definição das imagens
+        # Tamanho base
+        size = (MAUA_SIZE, MAUA_SIZE)
+        bullet_size = (MAUA_BULLET_SIZE, MAUA_BULLET_SIZE)
+        #region -- Definição das imagens
         # Imagem normal
-        img = pygame.transform.scale(img, (TILE_SIZE*2, TILE_SIZE*2))
-        # Imagem da bala
-        bullet_img = pygame.transform.scale(bullet_img, (TILE_SIZE, TILE_SIZE))
+        self.idle_img = pygame.transform.scale(assets[MAUA_IDLE_IMG], size)
+        # Andando
+        self.walk_img0 = pygame.transform.scale(assets[MAUA_WALK_IMG_0], size)
+        self.walk_img1 = pygame.transform.scale(assets[MAUA_WALK_IMG_1], size)
+        self.walk_fps = 0.2 * 1000
+        # Atirando
+        self.shoot_img = pygame.transform.scale(assets[MAUA_SHOOT_IMG], size)
+        # Lançando laser
+        self.maua_laser_img_0 = pygame.transform.scale(assets[MAUA_LASER_IMG_0], size)
+        self.maua_laser_img_1 = pygame.transform.scale(assets[MAUA_LASER_IMG_1], size)
+        self.maua_laser_img_2 = pygame.transform.scale(assets[MAUA_LASER_IMG_2], size)
+        # Morto
+        self.dead_img = pygame.transform.scale(assets[MAUA_DEAD_IMG], size)
         # Imagem do laser
-        laser_img = pygame.transform.scale(laser_img, (TILE_SIZE*10, TILE_SIZE))
+        self.laser_pre_img = pygame.transform.scale(assets[LASER_IMG_0], (WIDTH, MAUA_SIZE))
+        self.laser_img = pygame.transform.scale(assets[LASER_IMG_1], (WIDTH, MAUA_SIZE*2))
+        # Imagens da bala
+        self.bullet_imgs = [
+            pygame.transform.scale(assets[MAUA_BULLET_IMG_0], bullet_size),
+            pygame.transform.scale(assets[MAUA_BULLET_IMG_1], bullet_size),
+            pygame.transform.scale(assets[MAUA_BULLET_IMG_2], bullet_size)
+        ]
+        #endregion
 
-        # Salva a imagem normal e invertida em x para trocar a direção
-        self.img = img
-        self.flipped_img = pygame.transform.flip(img, True, False)
+        #region -- Sons
+        # Carrega o som
+        # Define seu volume
+        # Andar
+        self.walk_snd = assets[MAUA_WALK_SND]
+        self.walk_snd.set_volume(1)
+        # Disparo
+        self.shot_snd = assets[MAUA_SHOT_SND]
+        self.shot_snd.set_volume(0.25)
+        # Variação do disparo
+        self.shot_snd1 = assets[MAUA_SHOT_SND1]
+        self.shot_snd1.set_volume(0.25)
+        # Laser
+        self.laser_snd = assets[MAUA_LASER_SND]
+        self.laser_snd.set_volume(0.3)
+        #endregion
 
+        #region variáveis de imagem
         # Anexo da imagem inicial
         # Começa com a invertida para que ele fique
         # virado à esquerda
-        self.image = self.flipped_img
-        # Anexo da imagem da bala
-        self.bullet_img = bullet_img
-        # Anexo da imagem do laser
-        self.laser_img = laser_img
+        self.image = pygame.transform.flip(self.idle_img, True, False)
+
+        # Controle do tempo dos frames
+        self.last_frame = 0
+        # Controle do frame atual
+        self.current_frame = 0
 
         # Direção da imagem e do tiro
         self.dir = -1
 
+        # Retângulo que envolve a imagem
         self.rect = self.image.get_rect()
 
+        # Define a posição inicial
         self.rect.right = WIDTH - self.rect.width*2
-        self.rect.bottom = HEIGHT - TILE_SIZE * 2
+        self.rect.bottom = HEIGHT - TILE_SIZE * 5
+        #endregion
 
-        # -- Definição dos estados do boss
+        #region Vida
+        # Hitbox
+        self.hitbox = self.rect.inflate(-20, 0)
+        # Definição da vida inicial do boss
+        self.max_hp = MAUA_HP
+        self.hp = self.max_hp
+        # Vivo ou não. Usada para checar o estado
+        # fora do boss
+        self.alive = True
+        #endregion
+
+        #region -- Definição dos estados do boss
+        # Parado
         self.idle_state = 'idle'
+        # Andando
         self.walk_state = 'walk'
+        # Atirando
         self.shoot_state = 'shoot'
+        # Laser
         self.laser_state = 'laser'
-        # Lista que contém todos os estados
-        self.all_states = [self.idle_state, self.walk_state, self.shoot_state, self.laser_state]
+        # Morto. Esse estado é usado para quando
+        # a vida do boss zera, ao invés de apenas
+        # "apagá-lo" da tela
+        self.dead_state = 'dead'
+        # Lista que contém todos os estados normais.
+        # O estado "morto" não está aqui pois não
+        # é acessado pelo boss em seu ciclo padrão.
+        # Alguns estão repetidos para diminuir a 
+        # frequência de "idle"
+        self.all_states = [self.idle_state, self.walk_state, self.shoot_state, self.laser_state, self.walk_state, self.shoot_state] #[self.idle_state, self.walk_state, self.shoot_state, self.laser_state, self.walk_state, self.shoot_state, self.laser_state]
         # Estado atual
-        self.state = self.all_states[0]
+        self.state = self.walk_state
+        #endregion
 
-        # -- Variáveis de estado
+        #region -- Variáveis de estado
         # - Walk
         # Velocidade de andar
         self.walk_speed = MAUA_SPD
@@ -350,19 +494,21 @@ class Mauazinho(pygame.sprite.Sprite):
         # Tempo desde o início do carregamento
         self.laser_init = 0
         # Tempo para carregar o laser
-        self.laser_powerup = 3000
+        self.laser_powerup = MAUA_LASER_POWERUP
         # Duração do laser
-        self.laser_duration = 3000
+        self.laser_duration = MAUA_LASER_DURATION
         
         # Variável para controlar o tempo desde o último estado
         self.last_state = 0
         # Dicionário para definir o tempo de cada estado
         self.times = {
-            self.idle_state: 3000,
-            self.walk_state: 5000,
-            self.shoot_state: 5000,
-            self.laser_state: 2000 + self.laser_powerup + self.laser_duration # 2s a mais que o tempo total do laser
+            self.idle_state: 1.5 * 1000,
+            self.walk_state: 3 * 1000,
+            self.shoot_state: 3 * 1000,
+            self.laser_state: 0.5 * 1000 + self.laser_powerup + self.laser_duration, # 2s a mais que o tempo total do laser
+            self.dead_state: 100 * 1000
         }
+        #endregion
     # Método em que o Mauazinho fica parado.
     def idle(self):
         
@@ -372,6 +518,44 @@ class Mauazinho(pygame.sprite.Sprite):
     # Método em que o Mauazinho anda pela tela
     # ele sempre se mantém dentro dos limites
     def walk(self):
+        
+        # Pega o tick atual
+        now = pygame.time.get_ticks()
+        # Vê quanto tempo passou desde o último frame
+        elapsed_time = now - self.last_frame
+
+        image = self.image
+        # Se o tempo entre os frames passar do fps
+        if elapsed_time > self.walk_fps:
+            # Se o frame for o 1º, normal ou invertido...
+            if self.current_frame == 0:
+                # Troca a imagem para o 2º de acordo com a direção
+                # À direita
+                if self.dir > 0:
+                    image = self.walk_img1
+                # À esquerda
+                else:
+                    image = pygame.transform.flip(self.walk_img1, True, False)
+                
+                # Atualiza o frame atual
+                self.current_frame = 1
+            # Se for o 2º
+            else:
+                # Troca a imagem para o 1º de acordo com a direção
+                # À direita
+                if self.dir > 0:
+                    image = self.walk_img0
+                # À esquerda
+                else:
+                    image = pygame.transform.flip(self.walk_img0, True, False)
+                
+                # Atualiza o frame atual
+                self.current_frame = 0
+            
+            # Atualiza o momento do último frame
+            self.last_frame = now
+            # Toca o som de passo
+            self.walk_snd.play()
 
         # Inverte o movimento e a imagem do boss
         # Se o sprite estiver fora da tela...
@@ -379,17 +563,14 @@ class Mauazinho(pygame.sprite.Sprite):
             # Inverte a direção do movimento
             self.dir *= -1
 
-            # Se a velocidade for positiva
-            if self.dir > 0:
-                self.image = self.img
-            elif self.dir < 0:
-                self.image = self.flipped_img
+            image = pygame.transform.flip(image, self.dir, False)
 
+        # Atualiza a imagem caso haja alguma alteração
+        self.image = image
         # Atualiza a posição de acordo com a velocidade
         # e a direção
         self.rect.x += self.walk_speed * self.dir
     
-
     # Método de tiro
     def shoot(self):
         # Pega o tick atual
@@ -400,29 +581,80 @@ class Mauazinho(pygame.sprite.Sprite):
         # Se o tempo desde o último tiro é maior 
         # que o cooldown entre tiros...
         if elapsed_time > self.shot_cd:
-            # Gera uma bala
-            bullet = Maua_bullet(self.bullet_img, (self.rect.center), self.dir)
-            # Adiciona-a no grupo de sprites
-            self.all_sprites.add(bullet)
+            # número de balas
+            bullet_num = MAUA_BULLET_COUNT
+            # Define se as balas surgem para a direita ou esquerda
+            # de acordo com a direção
+            # Diferença de ângulo entre as balas
+            angle_dif = 35
+            # Ângulo inicial
+            base_angle = 5
+            multiplier = 1
+            # Se a direção for à esquerda...
+            if self.dir < 0:
+                # Altera o ângulo base
+                base_angle = 180 - base_angle
+
+                multiplier = -1
+            # Gera 3 balas em forma de cone
+            for i in range(bullet_num):
+                
+                bullet_angle = base_angle - angle_dif * i * multiplier
+                bullet = Maua_bullet(self.bullet_imgs, (self.rect.center), bullet_angle)
+                # Adiciona-a no grupo de sprites
+                self.all_sprites.add(bullet)
+                self.all_enemies.add(bullet)
+            
+            # Escolhe um som aleatório do tiro para evitar
+            # fadiga auditiva
+            sound = random.choice([self.shot_snd, self.shot_snd1])
+            # Toca o som de tiro
+            sound.play()
             # Atualiza o tempo do último tiro
             self.last_shot = now
 
     # Método de laser
     def laser(self):
-
-        # Pega o tick atual
-        now = pygame.time.get_ticks()
-        # Vê quanto tempo passou desde o começo
-        # do carregamento
-        elapsed_time = now - self.laser_init
-
-        if elapsed_time > self.laser_powerup and self.laser_exists == False:
+        # Gera apenas um pré laser
+        # o "pré laser" gera o laser danoso
+        if self.laser_exists == False:
             # Gera o laser
-            laser = Maua_laser(self.laser_img, (self.rect.center), self.dir, self.laser_duration)
+            laser = Maua_pre_laser(
+                [self.laser_pre_img, self.laser_img],
+                self.laser_snd, 
+                (self.rect.center), 
+                self.dir, 
+                self.laser_powerup, 
+                self.laser_duration, 
+                self.all_sprites, 
+                self.all_enemies)
             # Adiciona-o no grupo de sprites
             self.all_sprites.add(laser)
-
+            # Atualiza a variável para impedir
+            # infinitos lasers
             self.laser_exists = True
+    
+        # Pega o tick atual
+        now = pygame.time.get_ticks()
+        # Vê quanto tempo passou desde o último tiro
+        elapsed_time = now - self.laser_init
+
+        # Se o tempo passado for maior do que a ativação + duração do laser...
+        if elapsed_time > self.laser_duration + self.laser_powerup:
+            # Altera a imagem para o sprite sem laser
+            # de acordo com a direção
+            if self.dir > 0:
+                self.image = self.maua_laser_img_0
+            else:
+                self.image = pygame.transform.flip(self.maua_laser_img_0, True, False)
+        # Senão, se for maior que apenas a ativação...
+        elif elapsed_time > self.laser_powerup:
+            # Muda para a imagem do laser ativo
+            # de acordo com a direção
+            if self.dir > 0:
+                self.image = self.maua_laser_img_2
+            else:
+                self.image = pygame.transform.flip(self.maua_laser_img_2, True, False)
 
     def update(self):
         # Pega o tick atual
@@ -445,12 +677,32 @@ class Mauazinho(pygame.sprite.Sprite):
             # Guarda o momento em que trocou o estado
             self.last_state = now
 
-            # Se o estado for "laser"...
-            if self.state == self.laser_state:
-                # Confirma que não existe lasers na tela
-                self.laser_exists = False
-                # Determina o momento de início
-                self.laser_init = now
+            # Define a direção da imagem
+            img_flip = True
+            # Se estiver indo para a direita, a imagem não
+            # vai ser invertida
+            if self.dir > 0:
+                img_flip = False
+            
+            # De acordo com o estado, altera a imagem
+            match self.state:
+                case self.idle_state:
+                    self.image = pygame.transform.flip(self.idle_img, img_flip, False)
+                case self.walk_state:
+                    self.image = pygame.transform.flip(self.walk_img0, img_flip, False)
+
+                    # Atualiza o momento do último frame, pois a imagem foi alterada
+                    self.last_frame = now
+                case self.shoot_state:
+                    self.image = pygame.transform.flip(self.shoot_img, img_flip, False)
+                case self.laser_state:
+                    self.image = pygame.transform.flip(self.maua_laser_img_1, img_flip, False)
+
+                    # - Reset do laser
+                    # Confirma que não existe lasers na tela
+                    self.laser_exists = False
+                    # Determina o momento de início
+                    self.laser_init = now                
 
         # Define o método a ser chamado de acordo com 
         # o estado atual
@@ -467,40 +719,190 @@ class Mauazinho(pygame.sprite.Sprite):
             # Laser
             case self.laser_state:
                 self.laser()
+            # Morto
+            case self.dead_state:
+                self.dead()
 
-            
+        #region Dano
+        hits = pygame.sprite.spritecollide(self, self.all_bullets, True, collided)
+
+        for hit in hits:
+            # Diminui a vida atual
+            self.hp -= 1
+
+        # Se a vida for menor ou igual a zero...
+        if self.hp <= 0:
+            # Ativa o estado de morte
+            self.state = self.dead_state
+            # Remove o boss do grupo de ameaças
+            # para impedir o player de morrer
+            self.all_enemies.remove(self)
+        
+        self.hitbox.center = self.rect.center
+        #endregion
+
+    # Estado de morte
+    def dead(self):
+
+        self.alive = False
+        if self.dir > 0:
+            self.image = self.dead_img
+        else:
+            self.image = pygame.transform.flip(self.dead_img, True, False)
+
+# Classe que representa os tiros do mauazinho
 class Maua_bullet(pygame.sprite.Sprite):
-    def __init__(self, img, coordinates, direction):
+    def __init__(self, img, coordinates, angle):
         # Construtor da classe pai (Sprite)
         pygame.sprite.Sprite.__init__(self)
 
-        # A imagem já vem transformada pelo 
+        # As imagens já vem transformadas pelo 
         # objeto "Mauazinho", então é possível
-        # apenas assimila-la
-        # Contudo, varia de acordo com a direção
-        if direction > 0:
-            self.image = img
-        else:
-            self.image = pygame.transform.flip(img, True, False)
+        # apenas assimila-la e rotacionar
+
+        # Rotaciona a bala de acordo com o ângulo fornecido
+        # É uma lista para animação
+        self.images = [
+            pygame.transform.rotate(img[0], -angle),
+            pygame.transform.rotate(img[1], -angle),
+            pygame.transform.rotate(img[2], -angle)
+        ]
+        # Determina a imagem inicial
+        self.image = self.images[0]
+
+        # Tempo entre frames
+        self.fps = 0.1 * 1000   # Segundos x ticks
+        # Momento do último frame
+        self.last_frame = 0
 
         # Define o retângulo da imagem
         self.rect = self.image.get_rect()
         self.rect.center = coordinates
 
+        # Hitbox
+        self.hitbox = self.rect.inflate(-15, -15)
+
         # Define a velocidade da bala
-        self.speedx = MAUA_BULLET_SPD * direction
+        speed = MAUA_BULLET_SPD
+
+        # - Decompõe o movimento vertical e horizontal
+        # ângulo de graus para radianos
+        angle = math.radians(angle)
+        # Movimento em x
+        self.speedx = speed  * math.cos(angle)
+        # Movimento em y
+        self.speedy = speed * math.sin(angle)
     
     def update(self):
-
+        
         self.rect.x += self.speedx
+        self.rect.y += self.speedy
 
-        if self.rect.right < 0 or self.rect.left > WIDTH:
+        # Atualiza a hitbox
+        self.hitbox.center = self.rect.center
+
+        now = pygame.time.get_ticks()
+
+        elapsed_time = now - self.last_frame
+
+        if elapsed_time > self.fps:
+            
+            index = self.images.index(self.image) + 1
+            if index >= len(self.images):
+                index = 0
+
+            self.image = self.images[index]
+
+            self.last_frame = now
+        
+        if self.rect.right < 0 or self.rect.left > WIDTH or self.rect.bottom < 0 or self.rect.top > HEIGHT:
             self.kill()
 
-class Maua_laser(pygame.sprite.Sprite):
-    def __init__(self, img, coordinates, direction, duration):
+# Classe que representa o aviso de laser do mauazinho
+class Maua_pre_laser(pygame.sprite.Sprite):
+    def __init__(self, images, sound, coordinates, direction, powerup, duration, all_sprites, all_enemies):
         # Construtor da classe pai (Sprite)
         pygame.sprite.Sprite.__init__(self)
+
+        # Armazena as imagens das duas fases do laser
+        pre_img = images[0]
+        pos_img = images[1]
+
+        # Armazena o som do laser
+        self.sound = sound
+
+        # Armazena os argumentos para replicá-los
+        # no laser final
+        # Coordenadas
+        self.coordinates = coordinates
+        # Direção
+        self.direction = direction
+        # Tempo até carregar o laser real
+        self.powerup = powerup
+        # Duração
+        self.duration = duration
+        # Grupo com todos os sprites
+        self.all_sprites = all_sprites
+        # Grupo com as ameaças
+        self.all_enemies = all_enemies
+
+        # Variação da direção de acordo com o
+        # lado do mauazinho
+        # À direita
+        if direction > 0:
+            # Imagem de aviso
+            self.image = pre_img
+            # Imagem do laser final
+            self.pos_img = pos_img
+            # Define o retângulo da imagem
+            self.rect = self.image.get_rect()
+            # Define a extremidade para a esquerda
+            self.rect.midleft = self.coordinates
+            self.coordinates = (self.coordinates[0]+10, self.coordinates[1]+20)
+        # À esquerda
+        else:
+            # Imagem de aviso
+            self.image = pygame.transform.flip(pre_img, True, False)
+            # Imagem do laser final
+            self.pos_img = pygame.transform.flip(pos_img, True, False)
+            # Define o retângulo da imagem
+            self.rect = self.image.get_rect()
+            # Define a extremidade para a direita
+            self.rect.midright = self.coordinates
+            self.coordinates = (self.coordinates[0]-10, self.coordinates[1]+20)
+            
+        # Hitbox
+        self.hitbox = self.rect.inflate(-20, -20)
+
+        # Determina o tempo em que o laser surgiu
+        self.init = pygame.time.get_ticks()
+
+    def update(self):
+
+        # Pega o tick atual
+        now = pygame.time.get_ticks()
+        # Vê quanto tempo passou desde o começo
+        # do carregamento
+        elapsed_time = now - self.init
+
+        # Se o tempo desde o início superar a duração...
+        if elapsed_time > self.powerup:
+            # Gera o laser real
+            laser = Maua_laser(self.pos_img, self.sound, self.coordinates, self.direction, self.duration)
+            # Adiciona o laser aos grupos de sprites
+            self.all_sprites.add(laser)
+            self.all_enemies.add(laser)
+            # Apaga o laser
+            self.kill()
+
+# Classe que representa o laser do mauazinho
+class Maua_laser(pygame.sprite.Sprite):
+    def __init__(self, img, sound, coordinates, direction, duration):
+        # Construtor da classe pai (Sprite)
+        pygame.sprite.Sprite.__init__(self)
+
+        # Toca o som do laser
+        sound.play()
 
         # A imagem já vem transformada pelo 
         # objeto "Mauazinho", então é possível
@@ -522,6 +924,9 @@ class Maua_laser(pygame.sprite.Sprite):
             # Define a extremidade para a direita
             self.rect.midright = coordinates
         
+        # Hitbox
+        self.hitbox = self.rect.inflate(-10, -120)
+
         # Define o tempo de duração do laser
         # Após esse tempo, ele é apagado
         self.duration = duration
@@ -530,7 +935,7 @@ class Maua_laser(pygame.sprite.Sprite):
         self.init = pygame.time.get_ticks()
 
     def update(self):
-
+        
         # Pega o tick atual
         now = pygame.time.get_ticks()
         # Vê quanto tempo passou desde o começo
@@ -542,6 +947,20 @@ class Maua_laser(pygame.sprite.Sprite):
             # Apaga o laser
             self.kill()
 
+# Desenha a barra de vida do boss no topo da tela.
+def draw_boss_hp(surface, boss):
+    
+    bar_w = 500
+    bar_h = 22
+    x     = (WIDTH - bar_w) // 2
+    y     = 18
+    ratio = boss.hp / boss.max_hp
+    pygame.draw.rect(surface, (60, 20, 20),    (x, y, bar_w, bar_h),              border_radius=5)
+    pygame.draw.rect(surface, (220, 50, 50),   (x, y, int(bar_w * ratio), bar_h), border_radius=5)
+    pygame.draw.rect(surface, (255, 255, 255), (x, y, bar_w, bar_h), 2,           border_radius=5)
+    font  = pygame.font.SysFont(None, 26)
+    label = font.render('CHEFÃO', True, (255, 255, 255))
+    surface.blit(label, (x + bar_w // 2 - label.get_width() // 2, y + 2))
 
 # ===========================================================================
 # BOSS 3 — Rato no Robô

@@ -3,8 +3,10 @@ import pygame
 from config import *
 from telas import init_screen, game_screen
 from fase_boss3 import boss3_screen
+from telas import init_screen, game_screen, win_screen
 
 # --- Loop geral do jogo
+music('intro.mp3', 0.2)
 while state != QUIT:
 
     # Controle de FPS
@@ -14,7 +16,7 @@ while state != QUIT:
     if state == INIT:
         state = init_screen(window)
     # - Tela primeiro chefe
-    elif state == BOSS1:
+    elif state == MAUA:
         state = game_screen(window, MAP, state)
     # - Tela segundo chefe
     elif state == BOSS2:
@@ -22,5 +24,7 @@ while state != QUIT:
     # - Tela terceiro chefe
     elif state == BOSS3:
         state = boss3_screen(window)
+    elif state == WIN:
+        state = win_screen(window)
 
 pygame.quit()
