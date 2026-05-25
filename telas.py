@@ -77,10 +77,11 @@ def init_screen(window):
         if event.type == pygame.KEYDOWN:
             # E se a tecla é "enter"...
             if event.key == pygame.K_RETURN:
-                state = MAUA # ... e inicia o jogo
-            # Se a tecla for 3 ou f3...
+                state = MAUA
+            elif event.key in (pygame.K_2, pygame.K_KP2):
+                state = JARE_GV
             elif event.key in (pygame.K_3, pygame.K_KP3, pygame.K_F3):
-                state = BOSS3   # Tecla 3 (ou F3, ou numpad 3) → boss do rato
+                state = BOSS3
             
 
     logo = assets[LOGO_IMG]
@@ -174,6 +175,8 @@ def game_screen(window, mapa, boss, hp_imgs=None):
             # Eventos de pressionamento de tecla
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_0:
+                    state = JARE_GV
+                elif event.key in (pygame.K_2, pygame.K_KP2):
                     state = JARE_GV
                 elif event.key == pygame.K_3:
                     state = BOSS3
