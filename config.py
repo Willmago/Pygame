@@ -27,6 +27,7 @@ MAUA = 1    # Primeiro boss
 JARE_GV = 2   # Segundo boss
 BOSS3 = 4   # Terceiro boss (Rato no robô)
 WIN = 9     # Fim de jogo
+DEFEAT = 8  # Tela de derrota
 QUIT = 10   # Jogo fecha
 
 #region Variáveis gerais

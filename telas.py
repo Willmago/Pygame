@@ -2,6 +2,7 @@
 from config import *
 from classes import *
 from fase_boss3 import boss3_screen, draw_player_hp
+from os import path
 
 # Garante que BOSS3 está definido mesmo que o config.py seja uma versão antiga
 if 'BOSS3' not in dir():
@@ -188,8 +189,11 @@ def game_screen(window, mapa, boss, hp_imgs=None):
                         state = JARE_GV
                 # Se o player apertar "ESC" ou "R"...
                 elif event.key == pygame.K_ESCAPE:
-                    # Volta para a tela inicial
-                    state = INIT
+                    if player.alive == False:
+                        state = DEFEAT
+                    else:
+                        # Volta para a tela inicial
+                        state = INIT
                     # Reseta a música
                     music('intro.mp3', 0.2)
 
@@ -220,11 +224,10 @@ def game_screen(window, mapa, boss, hp_imgs=None):
             # Desenha a barra de vida dele
             draw_boss_hp(window, enemy)
 
-        # Se o player estiver morto...
+        # Se o player estiver morto, vai direto para a tela de derrota
         if player.alive == False:
-            # Desenha um texto em duas linhas
-            window.blit(dead_txt_up, (WIDTH/2 - dead_txt_rect_up.width/2, HEIGHT/4 - dead_txt_rect_up.height))
-            window.blit(dead_txt_down, (WIDTH/2 - dead_txt_rect_down.width/2, HEIGHT/4))
+            music('intro.mp3', 0.2)
+            state = DEFEAT
         
         # Desenha todos os sprites de acordo com a
         # ordem de criação
@@ -238,6 +241,52 @@ def game_screen(window, mapa, boss, hp_imgs=None):
         pygame.display.flip()
 
     return state # Retorna o estado de jogo para mudar a tela
+
+# -- Tela de derrota
+def defeat_screen(window):
+    """Exibe a tela de derrota com a imagem teladerrota.jpeg.
+    Pressionar ESC volta para a tela inicial."""
+
+    assets = load_assets(img_dir)
+    state = DEFEAT
+
+    # Carrega a imagem de derrota (com fallback via PIL para JPEG)
+    defeat_img_path = path.join(path.dirname(__file__), 'assets', 'img', 'teladerrota.png')
+    defeat_img = None
+    if path.exists(defeat_img_path):
+        try:
+            defeat_img = pygame.image.load(defeat_img_path).convert()
+            defeat_img = pygame.transform.scale(defeat_img, (WIDTH, HEIGHT))
+        except Exception as e:
+            print(f'[DERROTA] Não foi possível carregar a imagem: {e}')
+
+    # Fonte e texto de instrução
+    defeat_font = pygame.font.SysFont('georgia', 42)
+    esc_text = defeat_font.render("Pressione ESC para voltar ao início", True, WHITE)
+    esc_rect = esc_text.get_rect()
+
+    clock = pygame.time.Clock()
+
+    while state == DEFEAT:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                state = QUIT
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    state = INIT
+                    music('intro.mp3', 0.2)
+
+        if defeat_img:
+            window.blit(defeat_img, (0, 0))
+        else:
+            window.fill((20, 0, 0))
+
+        pygame.display.update()
+
+    return state
+
 
 # -- Tela de fim
 def win_screen(window):

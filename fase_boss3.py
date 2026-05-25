@@ -211,11 +211,7 @@ def boss3_screen(window, hp_imgs):
             state = WIN
 
         if not player.alive:
-            txt = font_big.render('VOCÊ MORREU!', True, (220, 50, 50))
-            window.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 40))
-            pygame.display.flip()
-            pygame.time.wait(2000)
-            state = INIT
+            state = DEFEAT
 
         pygame.display.flip()
 

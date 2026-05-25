@@ -1,17 +1,17 @@
 import pygame
-from config import JARE_GV, QUIT, WIN
+from config import JARE_GV, QUIT, WIN, DEFEAT, INIT, BOSS3
 from classes import *
 
 # ===== Main =====
 def reset_game():
     return (Player_2(), Boss(), PhaseManager(),
-            [], [], [], [], [], [], 0, 0, False, False)
+            [], [], [], [], [], [], 0, False, False)
 
 def main():
     (player, boss, pm,
     fall_bullets, horiz_missiles, diag_missiles,
     bolinhas, player_bullets, particles,
-    score, tick, game_over, win) = reset_game()
+    tick, game_over, win) = reset_game()
     state = JARE_GV
 
     while state == JARE_GV:
@@ -25,7 +25,7 @@ def main():
                     (player, boss, pm,
                     fall_bullets, horiz_missiles, diag_missiles,
                     bolinhas, player_bullets, particles,
-                    score, tick, game_over, win) = reset_game()
+                    tick, game_over, win) = reset_game()
                 elif event.key == pygame.K_RETURN and game_over:
                     state = BOSS3
 
@@ -44,6 +44,18 @@ def main():
             for o in (fall_bullets+horiz_missiles+diag_missiles+
                     bolinhas+player_bullets+particles):
                 o.update()
+
+            # Colisão bala do player → boss (antes de filtrar as balas)
+            brect = boss.rect()
+            for b in player_bullets:
+                if b.alive and b.rect().colliderect(brect):
+                    b.alive = False
+                    if boss.take_hit():
+                        for _ in range(10):
+                            particles.append(Particle(
+                                BOSS_X+BOSS_W//2, BOSS_Y+BOSS_H//2, C_YELLOW))
+                        if boss.hp <= 0: game_over=True; win=True
+
             fall_bullets   = [b for b in fall_bullets   if b.alive]
             horiz_missiles = [h for h in horiz_missiles if h.alive]
             diag_missiles  = [d for d in diag_missiles  if d.alive]
@@ -65,17 +77,6 @@ def main():
             for d in diag_missiles:  hit(d)
             for b in bolinhas:       hit(b)
 
-            brect = boss.rect()
-            for b in player_bullets:
-                if b.rect().colliderect(brect):
-                    b.alive=False
-                    if boss.take_hit():
-                        score+=100
-                        for _ in range(10):
-                            particles.append(Particle(
-                                BOSS_X+BOSS_W//2, BOSS_Y+BOSS_H//2, C_YELLOW))
-                        if boss.hp<=0: game_over=True; win=True; state == WIN
-
         # ── Desenho ──────────────────────────────────────────────────────
         draw_background(window, tick)
         pm.draw_bg(window, tick)          # cauda — plano de fundo
@@ -87,10 +88,13 @@ def main():
         for b in bolinhas:       b.draw(window)
         player.draw(window)
         for p in particles: p.draw(window)
-        draw_hud(window, score, pm.phase)  # HUD na frente da cauda
+        draw_hud(window, pm.phase)  # HUD na frente da cauda
         pm.draw_fg(window, tick)           # banner de transição no topo
-        if game_over: draw_game_over(window, win)
         pygame.display.flip()
+
+        # Se game over por derrota, vai direto para tela de derrota
+        if game_over and not win:
+            state = DEFEAT
     return state
 # ===== Cuphead-style Boss Fight — 3 Fases =====
 def boss_2():

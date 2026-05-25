@@ -1,7 +1,7 @@
 # --- Importa e inicia pacotes
 import pygame
 from config import *
-from telas import init_screen, game_screen, win_screen
+from telas import init_screen, game_screen, win_screen, defeat_screen
 from boss_2 import *
 from fase_boss3 import boss3_screen
 from os import path
@@ -45,5 +45,8 @@ while state != QUIT:
 
     elif state == WIN:
         state = win_screen(window)
+
+    elif state == DEFEAT:
+        state = defeat_screen(window)
 
 pygame.quit()
