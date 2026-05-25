@@ -315,7 +315,7 @@ def load_assets(img_dir):
 def music(name, volume):
     pygame.mixer.music.load(path.join(snd_dir, name))
     pygame.mixer.music.set_volume(volume)
-    pygame.mixer.music.play()
+    pygame.mixer.music.play(-1)
 
 # Gera tela principal
 #window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
