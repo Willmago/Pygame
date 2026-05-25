@@ -1,6 +1,7 @@
 # --- Tela do Boss 3: Rato no Robô
 import pygame
 from config import *
+
 from classes import Tile, Player, Boss3, player_movement
 
 
@@ -20,7 +21,7 @@ def draw_boss_hp(surface, boss):
 
 
 def draw_player_hp(surface, player, hp_imgs):
-    """Desenha o HUD de vidas no canto inferior esquerdo, igual ao Cuphead."""
+    """Desenha o HUD de vidas no canto inferior esquerdo."""
     if player.hp >= 3:
         img = hp_imgs[3]
     elif player.hp == 2:
@@ -28,7 +29,6 @@ def draw_player_hp(surface, player, hp_imgs):
     else:
         img = hp_imgs[1]
 
-    # Escala proporcional: altura de ~48px
     target_h = 48
     orig_w, orig_h = img.get_size()
     scale = target_h / orig_h
@@ -57,22 +57,7 @@ def boss3_screen(window, hp_imgs):
     enemy_projectiles = pygame.sprite.Group()
     mines_group       = pygame.sprite.Group()
 
-    # --- Mapa
-    for row in range(len(MAP3)):
-        for col in range(len(MAP3[row])):
-            tile_type = MAP3[row][col]
-            if tile_type != EMPTY:
-                img = None if tile_type == INVIS else assets[tile_type]
-                tile = Tile(img, row, col)
-                all_groups['all_sprites'].add(tile)
-                if tile_type == BLOCK:
-                    all_groups['blocks'].add(tile)
-                elif tile_type in (PLATF, INVIS):
-                    platforms.add(tile)
-                    if row == 13:
-                        all_groups['floor_group'].add(tile)
-
-    # --- Player
+    # --- all_groups definido ANTES do loop do mapa
     all_groups = {
         'all_sprites': all_sprites,
         'platforms':   platforms,
@@ -80,13 +65,30 @@ def boss3_screen(window, hp_imgs):
         'all_bullets': all_bullets,
         'all_enemies': pygame.sprite.Group(),
     }
+
+    # --- Mapa
+    for row in range(len(MAP3)):
+        for col in range(len(MAP3[row])):
+            tile_type = MAP3[row][col]
+            if tile_type != EMPTY:
+                img = None if tile_type == INVIS else assets[tile_type]
+                tile = Tile(img, row, col)
+                all_sprites.add(tile)
+                if tile_type == BLOCK:
+                    blocks.add(tile)
+                elif tile_type in (PLATF, INVIS):
+                    platforms.add(tile)
+                    if row == 13:
+                        floor_group.add(tile)
+
+    # --- Player
     player = Player(assets[PLAYER_IMG], 11, 2, assets, all_groups)
     player.hp = PLAYER_HP   # garante vida cheia ao entrar na fase
     all_sprites.add(player)
 
     # --- Controle de dano do player (i-frames manual para boss3)
-    I_FRAMES_BOSS3  = 1500   # ms de invulnerabilidade após tomar dano
-    last_player_hit = -I_FRAMES_BOSS3  # permite levar dano imediatamente
+    I_FRAMES_BOSS3  = 1500
+    last_player_hit = -I_FRAMES_BOSS3
 
     # --- Boss
     boss = Boss3(
@@ -98,10 +100,10 @@ def boss3_screen(window, hp_imgs):
         assets[BOSS_GEAR_IMG],
         WIDTH - BOSS3_WIDTH - 30,
         13 * TILE_SIZE,
-        all_groups['blocks'], all_groups['floor_group'],
+        blocks, floor_group,
         assets[NAIL_IMG], assets[GEAR_IMG], assets[MINE_IMG],
         assets[EXPLOSION_IMG], assets[WRENCH_SLASH_IMG],
-        all_groups['enemy_projectiles'], all_groups['mines_group'], all_groups['all_sprites']
+        enemy_projectiles, mines_group, all_sprites
     )
     all_sprites.add(boss)
     boss.player_ref = player
@@ -110,7 +112,7 @@ def boss3_screen(window, hp_imgs):
     state    = BOSS3
 
     def player_take_damage():
-        """Aplica 1 de dano ao player respeitando i-frames. Retorna True se acertou."""
+        """Aplica 1 de dano ao player respeitando i-frames."""
         nonlocal last_player_hit
         now = pygame.time.get_ticks()
         if now - last_player_hit >= I_FRAMES_BOSS3 and player.alive:
@@ -142,7 +144,8 @@ def boss3_screen(window, hp_imgs):
                 player.invincible = False
                 player.image.set_alpha(255)
             else:
-                alpha = int(100 * abs(__import__('math').sin(now * (25/1000))) + 155)
+                import math
+                alpha = int(100 * abs(math.sin(now * (25/1000))) + 155)
                 player.image.set_alpha(alpha)
         else:
             player.image.set_alpha(255)
@@ -150,21 +153,17 @@ def boss3_screen(window, hp_imgs):
         all_sprites.update()
 
         # --- Colisões de dano ao player ---
-
-        # Projéteis do boss (pregos/engrenagens)
         proj_hits = pygame.sprite.spritecollide(player, enemy_projectiles, True)
         if proj_hits:
             if player_take_damage():
                 player.speedy = -8
 
-        # Golpe da chave
         wrench_rect = boss.get_wrench_rect()
         if wrench_rect and player.rect.colliderect(wrench_rect):
             if player_take_damage():
                 player.speedy  = -10
                 player.rect.x += 60 * boss.direction
 
-        # Minas × player
         mine_player_hits = pygame.sprite.spritecollide(player, mines_group, False)
         for mine in mine_player_hits:
             mine.explode()
@@ -172,13 +171,10 @@ def boss3_screen(window, hp_imgs):
                 player.speedy = -8
 
         # --- Colisões de dano ao boss ---
-
-        # Balas do player × boss
         hits = pygame.sprite.spritecollide(boss, all_bullets, True)
         for _ in hits:
             boss.take_damage(1)
 
-        # Balas do player × minas
         mine_bullet_hits = pygame.sprite.groupcollide(mines_group, all_bullets, False, True)
         for mine in mine_bullet_hits:
             mine.explode()
@@ -187,7 +183,7 @@ def boss3_screen(window, hp_imgs):
         window.fill((30, 25, 20))
         window.blit(bg, (0, 0))
         window.set_clip((0, 0, WIDTH, 659))
-        all_groups['all_sprites'].draw(window)
+        all_sprites.draw(window)
         window.set_clip(None)
 
         if wrench_rect:
@@ -198,7 +194,6 @@ def boss3_screen(window, hp_imgs):
         if boss.alive:
             draw_boss_hp(window, boss)
 
-        # HUD de vidas do player
         draw_player_hp(window, player, hp_imgs)
 
         if not boss.alive:
