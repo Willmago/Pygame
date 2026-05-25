@@ -1,5 +1,5 @@
 # --- Importa e inicia pacotes
-import pygame
+import pygame, random, math, json, base64, io
 from os import path
 import math
 
@@ -24,7 +24,7 @@ TITULO = 'OI'   # Título da janela
 # Determinam, principalmente, a tela a ser carregada
 INIT = 0    # Inicializando
 MAUA = 1    # Primeiro boss
-BOSS2 = 2   # Segundo boss
+JARE_GV = 2   # Segundo boss
 BOSS3 = 4   # Terceiro boss (Rato no robô)
 WIN = 9     # Fim de jogo
 QUIT = 10   # Jogo fecha
@@ -189,29 +189,6 @@ MAP = [
     [STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE],
     [STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE]
 ]
-
-# - Mapa do segundo boss
-MAP2 = [
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK, BLOCK]
-]
-
 # Mapa do boss 3 — Oficina (27 colunas x 18 linhas, TILE_SIZE=40 → 1080x720)
 # bg: (1080, 659), y=0
 # Prateleira: linha 7,  cols 13-23 (y=280) — acima da mesa, alcançável pulando da mesa
@@ -267,7 +244,7 @@ def load_assets(img_dir):
     #endregion
     #region - Cenário
     assets[LOGO_IMG] = pygame.image.load(path.join(img_dir, 'logo.png')).convert_alpha()
-    assets[WIN_IMG] = pygame.image.load(path.join(img_dir, 'logo.png')).convert_alpha()
+    assets[WIN_IMG] = pygame.image.load(path.join(img_dir, 'ultimate_fox.png')).convert_alpha()
     assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
     assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
     assets[DIRTS] = pygame.image.load(path.join(img_dir, 'dirt.png')).convert_alpha()
@@ -281,7 +258,7 @@ def load_assets(img_dir):
     assets[MAUA_LASER_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_laser.wav'))
     assets[MAUA_WALK_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_walk.flac'))
     #endregion
-    #region Rato Polo
+    #region Rato Poli
     files = {
         BOSS_IMG:        'Chefao_Poli.png',
         BOSS_WALK_IMG:   'Sprite_lado_andando_perna_esquerda_frente.png',
@@ -351,3 +328,143 @@ state = INIT
 
 # relógio para controle de FPS
 clock = pygame.time.Clock()
+
+#region jaré da GV
+font_large = pygame.font.SysFont("Arial", 64, bold=True)
+font_med   = pygame.font.SysFont("Arial", 36, bold=True)
+font_small = pygame.font.SysFont("Arial", 24)
+
+# ===== Paleta =====
+C_BLACK     = (10,  10,  10)
+C_WHITE     = (255, 255, 255)
+C_RED       = (220, 50,  50)
+C_YELLOW    = (255, 220, 0)
+C_DARK_GRAY = (60,  60,  60)
+C_GREEN     = (40,  180, 80)
+C_OUTLINE   = (10,  10,  10)
+
+# ===== Constantes =====
+# Chão de pedra alinhado com o piso da imagem de fundo (y≈596 na tela 720p)
+GROUND_Y      = 596
+PLAYER_SPEED  = 5
+PLAYER_JUMP_V = -16
+GRAVITY_2       = 0.7
+PLAYER_W      = 52
+PLAYER_H      = 68
+BOSS_HP_MAX   = 135
+PLAYER_HP_MAX = 3
+PLAYER_W      = 52
+PLAYER_H      = 68
+
+FALL_SPD_MIN = 3.0
+FALL_SPD_MAX = 5.0
+HORIZ_SPD    = 5.0
+DIAG_SPD     = 3.5
+MIN_GAP      = PLAYER_W + 40   # 92 px corredor livre
+
+PHASE2_HP = BOSS_HP_MAX * 2 / 3   # 90
+PHASE3_HP = BOSS_HP_MAX * 1 / 3   # 45
+
+# ===== Carrega sprites =====
+def load_pixil(path):
+    import PIL.Image
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    src = data["frames"][0]["layers"][0]["src"]
+    b64 = src.split(",", 1)[1]
+    buf = io.BytesIO(base64.b64decode(b64))
+    img = PIL.Image.open(buf).convert("RGBA")
+    bbox = img.getbbox()
+    if bbox: img = img.crop(bbox)
+    return pygame.image.frombytes(img.tobytes(), img.size, "RGBA").convert_alpha()
+
+_boss_raw       = load_pixil("assets/img/jacare.pixil")
+_missil_raw     = load_pixil("assets/img/míssil.pixil")
+_cauda_raw       = load_pixil("assets/img/cauda.pixil")
+_perigo_raw      = load_pixil("assets/img/perigo.pixil")
+_bolinha_raw     = load_pixil("assets/img/bolinha.pixil")
+_raposa_raw      = load_pixil("assets/img/raposaarminha.pixil")
+_raposa_pulo_raw = load_pixil("assets/img/raposapulando.pixil")
+_tiro_raw        = load_pixil("assets/img/tiro.pixil")
+
+# Boss 3x
+boss_sprite = pygame.transform.scale(_boss_raw,
+    (_boss_raw.get_width()*3, _boss_raw.get_height()*3))
+BOSS_W = boss_sprite.get_width()
+BOSS_H = boss_sprite.get_height()
+
+# Imagem de fundo
+bg_image = pygame.transform.scale(
+    pygame.image.load("assets/img/fortalezajacare.png").convert(), (WIDTH, HEIGHT))
+
+# Rostos boss 3x
+_face_raws = [load_pixil("assets/img/rosto_jacare1.pixil"),
+            load_pixil("assets/img/rosto_jacare_3.pixil"),
+            load_pixil("assets/img/rosto_jacare_4.pixil")]
+boss_faces = [pygame.transform.scale(r, (r.get_width()*3, r.get_height()*3))
+            for r in _face_raws]
+
+# Míssil vertical fino 19x76
+_mf2 = pygame.transform.scale(_missil_raw,
+    (_missil_raw.get_width()*2, _missil_raw.get_height()*2))
+missil_fall = pygame.transform.scale(_mf2, (19, 76))
+BULLET_W, BULLET_H = missil_fall.get_width(), missil_fall.get_height()
+
+# Míssil horizontal
+_mh2 = pygame.transform.scale(_missil_raw,
+    (_missil_raw.get_width()*2, _missil_raw.get_height()*2))
+missil_horiz = pygame.transform.rotate(_mh2, -90)
+HORIZ_W, HORIZ_H = missil_horiz.get_width(), missil_horiz.get_height()
+
+# Mísseis diagonais
+missil_diag_r = pygame.transform.rotate(missil_fall,  45)
+missil_diag_l = pygame.transform.rotate(missil_fall, -45)
+
+# Cauda fase 1 — rotacionada 90° e flipada → ponta embaixo, escala 5x
+JACARE_ZONE = WIDTH // 3
+_cauda_rot  = pygame.transform.flip(pygame.transform.rotate(_cauda_raw, 90), False, True)
+JLADO_W     = _cauda_rot.get_width()  * 5
+JLADO_H     = _cauda_rot.get_height() * 5
+jacarelado_sprite = pygame.transform.scale(_cauda_rot, (JLADO_W, JLADO_H))
+
+# Sinal de perigo fase 1
+PERIGO_W = JACARE_ZONE
+PERIGO_H = int(_perigo_raw.get_height() * (JACARE_ZONE / _perigo_raw.get_width()))
+perigo_sprite = pygame.transform.scale(_perigo_raw, (PERIGO_W, PERIGO_H))
+
+# Bolinha fase 3 — 2x
+bolinha_sprite = pygame.transform.scale(_bolinha_raw,
+    (_bolinha_raw.get_width()*2, _bolinha_raw.get_height()*2))
+BOLINHA_W = bolinha_sprite.get_width()
+BOLINHA_H = bolinha_sprite.get_height()
+
+# Raposa — sprite original olha para a ESQUERDA
+# facing=-1 → sprite normal  |  facing=1 → flip horizontal
+raposa_sprite      = pygame.transform.scale(_raposa_raw,     (52, 68))
+raposa_sprite_flip = pygame.transform.flip(raposa_sprite,     True, False)
+raposa_pulo        = pygame.transform.scale(_raposa_pulo_raw, (52, 68))
+raposa_pulo_flip   = pygame.transform.flip(raposa_pulo,       True, False)
+
+# Tiro — 16x8
+tiro_sprite      = pygame.transform.scale(_tiro_raw, (16, 8))
+tiro_sprite_flip = pygame.transform.flip(tiro_sprite, True, False)
+PBULLET_W = 16
+PBULLET_H = 8
+
+# Plataforma do boss
+# Boss posicionado em cima da placa "Ordem Disciplina Resultados"
+# Placa: x=820..1080, topo em y≈480 na tela 720p
+SIGN_TOP_Y = 480    # topo da placa no jogo
+SIGN_CX    = 950    # centro X da placa (820 + 260/2)
+BOSS_X     = SIGN_CX - BOSS_W // 2   # centralizado sobre a placa
+BOSS_Y     = SIGN_TOP_Y - BOSS_H     # pés do boss exatamente no topo da placa
+
+# Platform virtual (sem desenho) — usado para limitar área de projéteis
+PLATFORM_X = 820
+PLATFORM_W = 260
+PLATFORM_Y = SIGN_TOP_Y
+
+# Altura rasteira para mísseis fase 3 (próximo ao chão)
+P3_HORIZ_Y_MIN = GROUND_Y - HORIZ_H - 10
+P3_HORIZ_Y_MAX = GROUND_Y - HORIZ_H - 2
+#endregion

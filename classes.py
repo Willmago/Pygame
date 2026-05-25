@@ -1372,3 +1372,429 @@ class Boss3(pygame.sprite.Sprite):
         else:
             return pygame.Rect(self.rect.left - WRENCH_REACH, self.rect.top + 20,
                                WRENCH_REACH, self.rect.height // 2)
+
+
+# ===== Gerador de chuva =====
+def spawn_rain(n, speed_mult):
+    lo, hi = FALL_SPD_MIN*speed_mult, FALL_SPD_MAX*speed_mult
+    area_s, area_e = 20, PLATFORM_X - 30
+    area_w = area_e - area_s
+    gap_s  = random.randint(area_s, area_e - MIN_GAP)
+    gap_e  = gap_s + MIN_GAP
+    bullets = []
+    if n == 0: return bullets
+    sw = area_w / n
+    for i in range(n):
+        lo_s = area_s + i*sw; hi_s = lo_s + sw - BULLET_W
+        if hi_s < lo_s: hi_s = lo_s
+        cx = (lo_s+hi_s)/2
+        if cx+BULLET_W > gap_s and cx < gap_e: continue
+        bx_lo = max(int(lo_s), area_s); bx_hi = min(int(hi_s), area_e-BULLET_W)
+        if bx_hi > gap_s-BULLET_W and bx_lo < gap_e:
+            if bx_lo < gap_s-BULLET_W: bx_hi = gap_s-BULLET_W
+            else: bx_lo = gap_e
+        if bx_hi < bx_lo: continue
+        bx = random.randint(bx_lo, bx_hi)
+        by = random.randint(-400, -BULLET_H)
+        bullets.append(FallingBullet(bx, by, random.uniform(lo, hi)))
+    return bullets
+
+def spawn_diag(n, speed_mult):
+    spd = DIAG_SPD * speed_mult
+    area_s, area_e = 20, PLATFORM_X - 30
+    sw = (area_e-area_s) / max(n,1)
+    missiles = []
+    for i in range(n):
+        bx = random.randint(int(area_s+i*sw), max(int(area_s+i*sw), int(area_s+(i+1)*sw)-BULLET_W))
+        bx = max(area_s, min(bx, area_e-BULLET_W))
+        missiles.append(DiagonalMissile(bx, -80, spd, 1 if i%2==0 else -1))
+    return missiles
+
+# ===== Cenário =====
+def draw_background(surf, tick):
+    # Apenas a imagem de fundo — sem céu, nuvens, chão ou plataforma desenhados
+    surf.blit(bg_image, (0, 0))
+
+def draw_player(surf, x, y, facing, hp, shooting, jumping=False):
+    # Sprite original olha para a ESQUERDA
+    # facing=-1 (esquerda) → sprite normal
+    # facing= 1 (direita)  → sprite espelhado
+    if jumping:
+        spr = raposa_pulo_flip if facing == 1 else raposa_pulo
+    else:
+        spr = raposa_sprite_flip if facing == 1 else raposa_sprite
+    surf.blit(spr, (int(x), int(y)))
+    for i in range(hp):
+        draw_heart(surf, int(x) + i*18, int(y) - 22, 8)
+
+def draw_heart(surf,x,y,size):
+    pygame.draw.circle(surf,C_RED,(x+size//2,y+size//2),size//2)
+    pygame.draw.circle(surf,C_RED,(x+size,   y+size//2),size//2)
+    pygame.draw.polygon(surf,C_RED,[(x,y+size//2),(x+size,y+size+size//2),(x+size*2,y+size//2)])
+
+def draw_boss_hpbar(surf, hp):
+    if   hp > PHASE2_HP: face = boss_faces[0]
+    elif hp > PHASE3_HP: face = boss_faces[1]
+    else:                face = boss_faces[2]
+    face_h = max(f.get_height() for f in boss_faces)
+    bw=300; bx=WIDTH//2-bw//2; by=face_h+16
+    pygame.draw.rect(surf,C_OUTLINE,  (bx-2,by-2,bw+4,24))
+    pygame.draw.rect(surf,C_DARK_GRAY,(bx,by,bw,20))
+    hw = int(bw*hp/BOSS_HP_MAX)
+    if hw>0:
+        hc = C_GREEN if hp>PHASE2_HP else C_YELLOW if hp>PHASE3_HP else C_RED
+        pygame.draw.rect(surf,hc,(bx,by,hw,20),border_radius=2)
+    surf.blit(face,(WIDTH//2-face.get_width()//2, by-face.get_height()-4))
+
+def draw_boss_sprite(surf, hp, attacking, tick):
+    bob = int(math.sin(tick*0.04)*4) if attacking else 0
+    surf.blit(boss_sprite,(BOSS_X,BOSS_Y+bob))
+    if attacking and (tick//8)%2==0:
+        glow=pygame.Surface((BOSS_W,BOSS_H),pygame.SRCALPHA)
+        pygame.draw.circle(glow,(255,220,0,70),(BOSS_W//2,BOSS_H//3),28)
+        surf.blit(glow,(BOSS_X,BOSS_Y+bob))
+    draw_boss_hpbar(surf,hp)
+
+def draw_hud(surf, score, phase):
+    surf.blit(font_med.render(f"SCORE: {score}",True,C_BLACK),(22,52))
+    surf.blit(font_med.render(f"SCORE: {score}",True,C_WHITE),(20,50))
+    surf.blit(font_small.render(f"Fase: {phase}",True,C_BLACK),(22,92))
+    surf.blit(font_small.render(f"Fase: {phase}",True,C_YELLOW),(20,90))
+
+def draw_game_over(surf, win):
+    ov=pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+    ov.fill((0,0,0,160)); surf.blit(ov,(0,0))
+    msg="VOCÊ VENCEU!" if win else "GAME OVER"
+    txt=font_large.render(msg,True,C_YELLOW if win else C_RED)
+    surf.blit(font_large.render(msg,True,C_BLACK),(WIDTH//2-txt.get_width()//2+4,HEIGHT//2-44))
+    surf.blit(txt,(WIDTH//2-txt.get_width()//2,HEIGHT//2-48))
+    sub=font_small.render("R = recomeçar  | Enter = Próxima fase |  ESC = sair",True,C_WHITE)
+    surf.blit(sub,(WIDTH//2-sub.get_width()//2,HEIGHT//2+20))
+
+# ===== Projéteis =====
+class FallingBullet:
+    def __init__(self,x,y,speed):
+        self.x=float(x); self.y=float(y); self.speed=speed; self.alive=True
+    def update(self): self.y+=self.speed; self.alive=self.y<=HEIGHT
+    def rect(self): m=3; return pygame.Rect(int(self.x)+m,int(self.y)+m,BULLET_W-m*2,BULLET_H-m*2)
+    def draw(self,surf): surf.blit(missil_fall,(int(self.x),int(self.y)))
+
+class HorizontalMissile:
+    def __init__(self,x,y,speed):
+        self.x=float(x); self.y=float(y); self.speed=speed; self.alive=True
+    def update(self): self.x-=self.speed; self.alive=self.x>-HORIZ_W-20
+    def rect(self): m=4; return pygame.Rect(int(self.x)+m,int(self.y)+m,HORIZ_W-m*2,HORIZ_H-m*2)
+    def draw(self,surf): surf.blit(missil_horiz,(int(self.x),int(self.y)))
+
+class DiagonalMissile:
+    def __init__(self,x,y,speed,direction):
+        self.x=float(x); self.y=float(y)
+        self.speedy=speed; self.speedx=speed*0.75*direction
+        self.sprite=missil_diag_r if direction==1 else missil_diag_l
+        self.sw=self.sprite.get_width(); self.sh=self.sprite.get_height()
+        self.alive=True
+    def update(self):
+        self.x+=self.speedx; self.y+=self.speedy
+        self.alive=self.y<=HEIGHT and -self.sw-20<self.x<WIDTH+20
+    def rect(self): m=8; return pygame.Rect(int(self.x)+m,int(self.y)+m,self.sw-m*2,self.sh-m*2)
+    def draw(self,surf): surf.blit(self.sprite,(int(self.x),int(self.y)))
+
+class Bolinha:
+    """Bolinha fase 3 — vem da direita na altura do pulo, pequena e mais lenta."""
+    def __init__(self,x,y,speed):
+        self.x=float(x); self.y=float(y); self.speed=speed; self.alive=True
+    def update(self): self.x-=self.speed; self.alive=self.x>-BOLINHA_W-10
+    def rect(self): m=1; return pygame.Rect(int(self.x)+m,int(self.y)+m,BOLINHA_W-m*2,BOLINHA_H-m*2)
+    def draw(self,surf): surf.blit(bolinha_sprite,(int(self.x),int(self.y)))
+
+class PlayerBullet:
+    def __init__(self,x,y,d):
+        self.x=float(x); self.y=float(y); self.dir=d; self.alive=True
+        # dir= 1 → vai para direita (tiro normal)
+        # dir=-1 → vai para esquerda (tiro espelhado)
+        self.spr = tiro_sprite if d == 1 else tiro_sprite_flip
+    def update(self): self.x+=12*self.dir; self.alive=-50<self.x<WIDTH+50
+    def rect(self): return pygame.Rect(int(self.x),int(self.y),PBULLET_W,PBULLET_H)
+    def draw(self,surf): surf.blit(self.spr,(int(self.x),int(self.y)))
+
+class Particle:
+    def __init__(self,x,y,color):
+        self.x=float(x); self.y=float(y)
+        self.vx=random.uniform(-4,4); self.vy=random.uniform(-6,-1)
+        self.life=random.randint(20,40); self.color=color; self.r=random.randint(3,8)
+    def update(self): self.x+=self.vx; self.y+=self.vy; self.vy+=0.3; self.life-=1
+    def draw(self,surf):
+        if self.life>0:
+            pygame.draw.circle(surf,self.color,(int(self.x),int(self.y)),max(1,int(self.r*self.life/40)))
+
+# ===== Cauda (Fase 1) — varre o céu, desce quando alinhada com o jogador =====
+class JacareHead:
+    """
+    Ciclo:
+    'sweeping' — ~40% do sprite visível no topo, move lado a lado.
+                Desce IMEDIATAMENTE quando alinhada com o jogador,
+                desde que o cooldown de 2s entre descidas tenha passado.
+    'falling'  — desce
+    'holding'  — pausa curta no chão
+    'rising'   — sobe de volta → retorna a 'sweeping'
+    """
+    SWEEP_SPEED    = 5      # px/frame varrendo
+    FALL_SPEED     = 13     # px/frame caindo
+    RISE_SPEED     = 20     # px/frame subindo
+    HOLD_TIME      = 25     # frames no chão
+    MIN_DIVE_DELAY = 120    # frames de cooldown entre descidas (2s a 60fps)
+    ALIGN_MARGIN   = 50     # px de tolerância para considerar "alinhado"
+    PEEK_Y         = -JLADO_H + int(JLADO_H * 0.40)
+
+    def __init__(self):
+        self.state         = 'idle'
+        self.x             = 0.0
+        self.y             = float(self.PEEK_Y)
+        self.sweep_dir     = 1
+        self.timer         = 0
+        self.dive_cooldown = 0
+        self.done          = False
+
+    def start(self, player_x):
+        self.x             = float(random.randint(0, max(0, WIDTH - JLADO_W)))
+        self.y             = float(self.PEEK_Y)
+        self.sweep_dir     = random.choice([-1, 1])
+        self.timer         = 0
+        self.dive_cooldown = self.MIN_DIVE_DELAY  # espera inicial antes da 1ª descida
+        self.done          = False
+        self.state         = 'sweeping'
+
+    def update(self, player_x):
+        if self.state == 'idle':
+            return
+
+        self.timer += 1
+        if self.dive_cooldown > 0:
+            self.dive_cooldown -= 1
+
+        if self.state == 'sweeping':
+            self.x += self.SWEEP_SPEED * self.sweep_dir
+            if self.x <= 0:
+                self.x = 0.0; self.sweep_dir = 1
+            if self.x >= WIDTH - JLADO_W:
+                self.x = float(WIDTH - JLADO_W); self.sweep_dir = -1
+
+            # Desce imediatamente ao passar sobre o jogador, se cooldown zerado
+            cauda_cx  = self.x + JLADO_W / 2
+            player_cx = player_x + PLAYER_W / 2
+            if self.dive_cooldown == 0 and abs(cauda_cx - player_cx) <= self.ALIGN_MARGIN:
+                self.state = 'falling'
+                self.timer = 0
+
+        elif self.state == 'falling':
+            self.y += self.FALL_SPEED
+            if self.y + JLADO_H >= GROUND_Y:
+                self.y     = float(GROUND_Y - JLADO_H)
+                self.state = 'holding'
+                self.timer = 0
+
+        elif self.state == 'holding':
+            if self.timer >= self.HOLD_TIME:
+                self.state         = 'rising'
+                self.dive_cooldown = self.MIN_DIVE_DELAY
+                self.timer         = 0
+
+        elif self.state == 'rising':
+            self.y -= self.RISE_SPEED
+            if self.y <= self.PEEK_Y:
+                self.y     = float(self.PEEK_Y)
+                self.state = 'sweeping'
+                self.timer = 0
+                self.done  = True
+
+    def rect(self):
+        if self.state in ('falling', 'holding'):
+            tip_h    = JLADO_H // 4
+            margin_x = JLADO_W // 3
+            return pygame.Rect(
+                int(self.x) + margin_x,
+                int(self.y) + JLADO_H - tip_h,
+                JLADO_W - margin_x * 2,
+                tip_h
+            )
+        return pygame.Rect(0, 0, 0, 0)
+
+    def draw_bg(self, surf):
+        if self.state != 'idle':
+            surf.blit(jacarelado_sprite, (int(self.x), int(self.y)))
+
+# ===== Player =====
+class Player_2:
+    def __init__(self): self.reset()
+    def reset(self):
+        self.x=80.0; self.y=float(GROUND_Y-PLAYER_H)
+        self.vx=0.0; self.vy=0.0; self.on_ground=False
+        self.facing=1; self.hp=PLAYER_HP_MAX
+        self.inv_timer=0; self.shoot_cd=0; self.shooting=False
+    def update(self, keys):
+        self.vx=0
+        if keys[pygame.K_LEFT]  or keys[pygame.K_a]: self.vx=-PLAYER_SPEED; self.facing=-1
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]: self.vx= PLAYER_SPEED; self.facing= 1
+        if (keys[pygame.K_UP] or keys[pygame.K_w] or keys[pygame.K_SPACE]) and self.on_ground:
+            self.vy=PLAYER_JUMP_V; self.on_ground=False
+        self.vy+=GRAVITY_2; self.x+=self.vx; self.y+=self.vy
+        if self.y>=GROUND_Y-PLAYER_H: self.y=GROUND_Y-PLAYER_H; self.vy=0; self.on_ground=True
+        # Limites laterais — parede invisível à direita impedindo chegar ao boss
+        self.x = max(0, min(PLATFORM_X - PLAYER_W - 5, self.x))
+        if self.inv_timer>0: self.inv_timer-=1
+        if self.shoot_cd>0:  self.shoot_cd-=1
+        self.shooting=keys[pygame.K_z] or keys[pygame.K_LCTRL]
+    def shoot(self):
+        if self.shoot_cd==0 and self.shooting:
+            self.shoot_cd=12
+            bx = self.x+PLAYER_W if self.facing==1 else self.x-PBULLET_W
+            by = self.y+PLAYER_H//2-PBULLET_H//2
+            return PlayerBullet(bx,by,self.facing)
+        return None
+    def take_hit(self):
+        if self.inv_timer==0: self.hp-=1; self.inv_timer=90; return True
+        return False
+    def rect(self): return pygame.Rect(int(self.x)+8,int(self.y)+10,PLAYER_W-16,PLAYER_H-14)
+    def draw(self,surf):
+        if self.inv_timer>0 and (self.inv_timer//6)%2==1: return
+        draw_player(surf, self.x, self.y, self.facing, self.hp, self.shooting,
+                    jumping=not self.on_ground)
+
+# ===== Boss =====
+class Boss:
+    def __init__(self): self.reset()
+    def reset(self):
+        self.hp=BOSS_HP_MAX; self.inv_timer=0; self.attacking=False
+    def phase(self):
+        if self.hp > PHASE2_HP: return 1
+        if self.hp > PHASE3_HP: return 2
+        return 3
+    def rect(self): return pygame.Rect(BOSS_X+BOSS_W//4,BOSS_Y+BOSS_H//4,BOSS_W//2,BOSS_H//2)
+    def take_hit(self):
+        if self.inv_timer==0: self.hp=max(0,self.hp-1); self.inv_timer=20; return True
+        return False
+    def update(self):
+        if self.inv_timer>0: self.inv_timer-=1
+    def draw(self,surf,tick): draw_boss_sprite(surf,self.hp,self.attacking,tick)
+
+# ===== Gerenciador de fases =====
+class PhaseManager:
+    P1_ATTACK_INTERVAL  = 80    # delay inicial antes da primeira cauda
+    P2_SPAWN_INTERVAL   = 62    # frames entre spawns fase 2 (reduzido)
+    P3_HORIZ_INTERVAL   = 70    # frames entre mísseis fase 3 (era 55, menos frequente)
+    P3_HORIZ_GAP        = 280
+    P3_BOLINHA_INTERVAL = 120
+
+    def __init__(self): self.reset()
+
+    def reset(self):
+        self.phase       = 1
+        self.transition  = False
+        self.trans_timer = 0
+        self.TRANS_DUR   = 90
+        # Fase 1
+        self.jacare_head = JacareHead()
+        self.head_timer  = 80    # delay inicial antes da primeira cabeçada
+        self.head_active = False
+        # Fase 2
+        self.p2_timer = 0
+        # Fase 3
+        self.p3_horiz_timer   = 0
+        self.p3_bolinha_timer = 0
+
+    def update(self, boss, fall_bullets, horiz_missiles, diag_missiles,
+            bolinhas, player, particles):
+        """Retorna True se o jogador morreu."""
+
+        # ── Pausa de transição entre fases ───────────────────────────────
+        if self.transition:
+            self.trans_timer += 1
+            if self.trans_timer >= self.TRANS_DUR:
+                self.transition  = False
+                self.trans_timer = 0
+                self.head_timer  = 60
+                self.p2_timer    = 0
+                self.p3_horiz_timer   = 0
+                self.p3_bolinha_timer = 0
+            return False
+
+        current = boss.phase()
+
+        # ── Detecta mudança de fase ───────────────────────────────────────
+        if current != self.phase:
+            self.phase      = current
+            self.transition = True
+            self.trans_timer = 0
+            fall_bullets.clear(); horiz_missiles.clear()
+            diag_missiles.clear(); bolinhas.clear()
+            self.jacare_head.state = 'idle'
+            return False
+
+        # ── FASE 1: cauda do céu ─────────────────────────────────────────
+        if self.phase == 1:
+            boss.attacking = self.jacare_head.state in ('falling', 'holding')
+            self.jacare_head.update(player.x)
+
+            # Inicia o primeiro ciclo após o delay inicial
+            if self.jacare_head.state == 'idle' and self.head_timer > 0:
+                self.head_timer -= 1
+                if self.head_timer == 0:
+                    self.jacare_head.start(player.x)
+
+            # done=True significa que completou 1 ciclo — atualiza o target_x
+            # mas a cauda já voltou ao sweeping sozinha, não precisa reiniciar
+            if self.jacare_head.done:
+                self.jacare_head.done = False
+
+            # Colisão cauda x jogador (só quando está descendo ou parada)
+            if self.jacare_head.state in ('falling', 'holding'):
+                if self.jacare_head.rect().colliderect(player.rect()):
+                    if player.take_hit():
+                        for _ in range(12):
+                            particles.append(Particle(
+                                player.x+PLAYER_W//2, player.y+PLAYER_H//2, C_RED))
+                        if player.hp<=0: return True
+
+        # ── FASE 2: chuva contínua — verticais + diagonais ───────────────
+        elif self.phase == 2:
+            boss.attacking = True
+            self.p2_timer += 1
+            if self.p2_timer >= self.P2_SPAWN_INTERVAL:
+                self.p2_timer = 0
+                fall_bullets.extend(spawn_rain(3, 1.5))   # era 4
+                if random.random() < 0.4:                  # era 0.5
+                    diag_missiles.extend(spawn_diag(2, 1.5))
+
+        # ── FASE 3: mísseis rasteiros + bolinhas na altura do pulo ───────
+        elif self.phase == 3:
+            boss.attacking = True
+
+            # Mísseis horizontais RASTEIROS — 1 por vez, mais rápidos
+            self.p3_horiz_timer += 1
+            if self.p3_horiz_timer >= self.P3_HORIZ_INTERVAL:
+                self.p3_horiz_timer = 0
+                hy = random.randint(P3_HORIZ_Y_MIN, P3_HORIZ_Y_MAX)
+                # Velocidade 1.8x maior que a base
+                horiz_missiles.append(HorizontalMissile(WIDTH, hy, HORIZ_SPD * 1.8))
+
+            # Bolinhas — menos frequentes, pequenas, na altura do pulo
+            self.p3_bolinha_timer += 1
+            if self.p3_bolinha_timer >= self.P3_BOLINHA_INTERVAL:
+                self.p3_bolinha_timer = 0
+                jump_y = GROUND_Y - PLAYER_H - random.randint(50, 120)
+                bolinhas.append(Bolinha(WIDTH+10, jump_y, HORIZ_SPD * 0.45))
+
+        return False
+
+    def draw_bg(self, surf, tick):
+        """Camada de fundo: cauda (antes da HUD)."""
+        if self.phase == 1:
+            self.jacare_head.draw_bg(surf)
+
+    def draw_fg(self, surf, tick):
+        """Camada de frente: banner de transição (após HUD)."""
+        if self.transition and (tick//12)%2==0:
+            txt = font_med.render("── PRÓXIMA FASE ──", True, C_YELLOW)
+            surf.blit(font_med.render("── PRÓXIMA FASE ──",True,C_BLACK),
+                    (WIDTH//2-txt.get_width()//2+2, HEIGHT//2-42))
+            surf.blit(txt, (WIDTH//2-txt.get_width()//2, HEIGHT//2-44))

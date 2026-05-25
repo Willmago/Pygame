@@ -142,7 +142,7 @@ def boss3_screen(window):
             window.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 40))
             pygame.display.flip()
             pygame.time.wait(3000)
-            state = INIT
+            state = WIN
 
         pygame.display.flip()
 

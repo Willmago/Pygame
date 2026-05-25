@@ -30,6 +30,10 @@ dead_txt_rect_up = dead_txt_up.get_rect()
 
 dead_txt_down = dead_font.render("Pressione ESC para recomeçar", True, RED)
 dead_txt_rect_down = dead_txt_down.get_rect()
+
+# Texto game over
+win_txt = init_font.render("Pressione ESC para sair", True, WHITE)
+win_txt_rect= win_txt.get_rect()
 #endregion
 
 # Função que coloca os blocos do tileset de acordo
@@ -95,7 +99,7 @@ def init_screen(window):
 # --- Tela base do jogo
 def game_screen(window, mapa, boss):
 
-    # -- Definições inicias
+    #region -- Definições inicias
     # Relógio para FPS
     clock = pygame.time.Clock()
     # Carrega os assets
@@ -145,6 +149,7 @@ def game_screen(window, mapa, boss):
     # Adiciona o player depois para garantir que vai ser
     # desenhado por cima
     all_groups['all_sprites'].add(player)
+    #endregion
 
     # Define o estado inicial como o chefe atual
     state = boss
@@ -168,7 +173,7 @@ def game_screen(window, mapa, boss):
             # Eventos de pressionamento de tecla
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_0:
-                    state = BOSS2
+                    state = JARE_GV
                 elif event.key == pygame.K_3:
                     state = BOSS3
 
@@ -176,7 +181,7 @@ def game_screen(window, mapa, boss):
                 elif event.key == pygame.K_RETURN and enemy.alive == False:
                     # Muda de tela de acordo com o boss
                     if boss == MAUA:
-                        state = BOSS3
+                        state = JARE_GV
                 # Se o player apertar "ESC" ou "R"...
                 elif event.key == pygame.K_ESCAPE:
                     # Volta para a tela inicial
@@ -229,6 +234,38 @@ def game_screen(window, mapa, boss):
 # -- Tela de fim
 def win_screen(window):
 
-    init_screen(window)
+    assets = load_assets(img_dir)
 
-    return WIN
+    state = WIN # Define o estado como inicializando para garantir a continuidade da função
+
+    # -- Verifica os eventos do frame
+    for event in pygame.event.get():
+        # - Verifica se foi fechado.
+        if event.type == pygame.QUIT:
+            state = QUIT
+
+        # - Verifica se o usuário apertou alguma tecla...
+        if event.type == pygame.KEYDOWN:
+            # E se a tecla é "enter"...
+            if event.key == pygame.K_ESCAPE:
+                state = QUIT
+            elif event.key == pygame.K_r:
+                state = INIT
+
+    win = assets[WIN_IMG]
+    win_rect = win.get_rect()
+    scale = 1
+    win = pygame.transform.scale(win, (win_rect.width * scale, win_rect.width * scale))
+    win_rect = win.get_rect()
+    pos_x = WIDTH/2 - win_rect.width/2
+    pos_y = HEIGHT/2 - 4* win_rect.height/7
+    win_pos = (pos_x, pos_y)
+
+    window.fill(PURPLE)         # Preence a tela de Roxo
+    window.blit(win, win_pos)   # Desenha a imagem de fim
+
+    # Desenha texto
+    window.blit(win_txt, (WIDTH/2 - win_txt_rect.width/2, win_rect.height))
+
+    pygame.display.update()     # Atualiza a tela
+    return state                # Retorna o estado para continuar o jogo
