@@ -6,7 +6,6 @@ from boss_2 import *
 from fase_boss3 import boss3_screen
 from os import path
 
-<<<<<<< HEAD
 # --- Carrega imagens de vida do player
 def load_hp_imgs(img_dir):
     """Carrega os sprites de HUD de vida (1, 2 e 3 vidas)."""
@@ -24,8 +23,6 @@ def load_hp_imgs(img_dir):
     return hp_imgs
 hp_imgs = load_hp_imgs(img_dir)
 
-=======
->>>>>>> c7157d005d62637c4e02d4ac11dfa3e429a24e31
 # --- Loop geral do jogo
 music('intro.mp3', 0.2)
 while state != QUIT:
