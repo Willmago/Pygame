@@ -1,7 +1,7 @@
 # -- Importa e inicia pacotes
 from config import *
 from classes import *
-from fase_boss3 import boss3_screen
+from fase_boss3 import boss3_screen, draw_player_hp
 
 # Garante que BOSS3 está definido mesmo que o config.py seja uma versão antiga
 if 'BOSS3' not in dir():
@@ -93,7 +93,7 @@ def init_screen(window):
     return state                # Retorna o estado para continuar o jogo
 
 # --- Tela base do jogo
-def game_screen(window, mapa, boss):
+def game_screen(window, mapa, boss, hp_imgs=None):
 
     # -- Definições inicias
     # Relógio para FPS
@@ -138,6 +138,7 @@ def game_screen(window, mapa, boss):
 
     # Gera o player
     player = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
+    player.hp = PLAYER_HP   # garante vida cheia ao entrar na fase
 
     # Cria o mapa
     map_create(mapa, all_groups, assets)
@@ -226,6 +227,10 @@ def game_screen(window, mapa, boss):
         # Desenha todos os sprites de acordo com a
         # ordem de criação
         all_sprites.draw(window)
+
+        # HUD de vidas do player
+        if hp_imgs:
+            draw_player_hp(window, player, hp_imgs)
 
         # Depois de desenhar tudo, inverte o display.
         pygame.display.flip()

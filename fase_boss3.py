@@ -19,7 +19,29 @@ def draw_boss_hp(surface, boss):
     surface.blit(label, (x + bar_w // 2 - label.get_width() // 2, y + 2))
 
 
-def boss3_screen(window):
+def draw_player_hp(surface, player, hp_imgs):
+    """Desenha o HUD de vidas no canto inferior esquerdo, igual ao Cuphead."""
+    if player.hp >= 3:
+        img = hp_imgs[3]
+    elif player.hp == 2:
+        img = hp_imgs[2]
+    else:
+        img = hp_imgs[1]
+
+    # Escala proporcional: altura de ~48px
+    target_h = 48
+    orig_w, orig_h = img.get_size()
+    scale = target_h / orig_h
+    target_w = int(orig_w * scale)
+    img_scaled = pygame.transform.scale(img, (target_w, target_h))
+
+    margin = 12
+    x = margin
+    y = HEIGHT - target_h - margin
+    surface.blit(img_scaled, (x, y))
+
+
+def boss3_screen(window, hp_imgs):
     clock  = pygame.time.Clock()
     assets = load_boss3_assets(img_dir)
 
@@ -30,7 +52,7 @@ def boss3_screen(window):
     all_sprites       = pygame.sprite.Group()
     platforms         = pygame.sprite.Group()
     blocks            = pygame.sprite.Group()
-    floor_group       = pygame.sprite.Group()   # só o chão — usado pelo boss
+    floor_group       = pygame.sprite.Group()
     all_bullets       = pygame.sprite.Group()
     enemy_projectiles = pygame.sprite.Group()
     mines_group       = pygame.sprite.Group()
@@ -47,7 +69,6 @@ def boss3_screen(window):
                     blocks.add(tile)
                 elif tile_type in (PLATF, INVIS):
                     platforms.add(tile)
-                    # Linha 13 = chão (y=520) vai para floor_group
                     if row == 13:
                         floor_group.add(tile)
 
@@ -60,7 +81,12 @@ def boss3_screen(window):
         'all_enemies': pygame.sprite.Group(),
     }
     player = Player(assets[PLAYER_IMG], 11, 2, assets, all_groups)
+    player.hp = PLAYER_HP   # garante vida cheia ao entrar na fase
     all_sprites.add(player)
+
+    # --- Controle de dano do player (i-frames manual para boss3)
+    I_FRAMES_BOSS3  = 1500   # ms de invulnerabilidade após tomar dano
+    last_player_hit = -I_FRAMES_BOSS3  # permite levar dano imediatamente
 
     # --- Boss
     boss = Boss3(
@@ -78,13 +104,29 @@ def boss3_screen(window):
         enemy_projectiles, mines_group, all_sprites
     )
     all_sprites.add(boss)
-    boss.player_ref = player   # para pregos mirarem no jogador
+    boss.player_ref = player
 
     font_big = pygame.font.SysFont(None, 80)
     state    = BOSS3
 
+    def player_take_damage():
+        """Aplica 1 de dano ao player respeitando i-frames. Retorna True se acertou."""
+        nonlocal last_player_hit
+        now = pygame.time.get_ticks()
+        if now - last_player_hit >= I_FRAMES_BOSS3 and player.alive:
+            player.hp -= 1
+            last_player_hit = now
+            player.invincible = True
+            if player.hp <= 0:
+                player.alive = False
+                player.speedx = 0
+            return True
+        return False
+
     while state == BOSS3:
         clock.tick(FPS)
+
+        now = pygame.time.get_ticks()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -94,36 +136,55 @@ def boss3_screen(window):
                 if event.key == pygame.K_r:
                     state = INIT
 
+        # Efeito de piscar durante invulnerabilidade
+        if player.invincible:
+            if now - last_player_hit > I_FRAMES_BOSS3:
+                player.invincible = False
+                player.image.set_alpha(255)
+            else:
+                alpha = int(100 * abs(__import__('math').sin(now * (25/1000))) + 155)
+                player.image.set_alpha(alpha)
+        else:
+            player.image.set_alpha(255)
+
         all_sprites.update()
 
-        # Colisão: balas do player × boss
+        # --- Colisões de dano ao player ---
+
+        # Projéteis do boss (pregos/engrenagens)
+        proj_hits = pygame.sprite.spritecollide(player, enemy_projectiles, True)
+        if proj_hits:
+            if player_take_damage():
+                player.speedy = -8
+
+        # Golpe da chave
+        wrench_rect = boss.get_wrench_rect()
+        if wrench_rect and player.rect.colliderect(wrench_rect):
+            if player_take_damage():
+                player.speedy  = -10
+                player.rect.x += 60 * boss.direction
+
+        # Minas × player
+        mine_player_hits = pygame.sprite.spritecollide(player, mines_group, False)
+        for mine in mine_player_hits:
+            mine.explode()
+            if player_take_damage():
+                player.speedy = -8
+
+        # --- Colisões de dano ao boss ---
+
+        # Balas do player × boss
         hits = pygame.sprite.spritecollide(boss, all_bullets, True)
         for _ in hits:
             boss.take_damage(1)
 
-        # Colisão: balas do player × minas — dispara explosão
+        # Balas do player × minas
         mine_bullet_hits = pygame.sprite.groupcollide(mines_group, all_bullets, False, True)
         for mine in mine_bullet_hits:
             mine.explode()
 
-        # Colisão: projéteis do boss × player
-        if pygame.sprite.spritecollide(player, enemy_projectiles, True):
-            player.speedy = -8
-
-        # Colisão: golpe da chave × player
-        wrench_rect = boss.get_wrench_rect()
-        if wrench_rect and player.rect.colliderect(wrench_rect):
-            player.speedy  = -10
-            player.rect.x += 60 * boss.direction
-
-        # Colisão: minas × player — dispara explosão
-        mine_player_hits = pygame.sprite.spritecollide(player, mines_group, False)
-        for mine in mine_player_hits:
-            mine.explode()
-            player.speedy = -8
-
-        # Desenha
-        window.fill((30, 25, 20))  # fundo preto para cobrir área abaixo do bg
+        # --- Desenho ---
+        window.fill((30, 25, 20))
         window.blit(bg, (0, 0))
         window.set_clip((0, 0, WIDTH, 659))
         all_sprites.draw(window)
@@ -137,11 +198,21 @@ def boss3_screen(window):
         if boss.alive:
             draw_boss_hp(window, boss)
 
+        # HUD de vidas do player
+        draw_player_hp(window, player, hp_imgs)
+
         if not boss.alive:
             txt = font_big.render('CHEFÃO DERROTADO!', True, (255, 220, 50))
             window.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 40))
             pygame.display.flip()
             pygame.time.wait(3000)
+            state = INIT
+
+        if not player.alive:
+            txt = font_big.render('VOCÊ MORREU!', True, (220, 50, 50))
+            window.blit(txt, (WIDTH // 2 - txt.get_width() // 2, HEIGHT // 2 - 40))
+            pygame.display.flip()
+            pygame.time.wait(2000)
             state = INIT
 
         pygame.display.flip()
