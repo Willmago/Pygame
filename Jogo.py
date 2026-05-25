@@ -18,9 +18,6 @@ while state != QUIT:
     # - Tela primeiro chefe
     elif state == MAUA:
         state = game_screen(window, MAP, state)
-    # - Tela segundo chefe
-    elif state == BOSS2:
-        state = game_screen(window, MAP2, state)
     # - Tela terceiro chefe
     elif state == BOSS3:
         state = boss3_screen(window)

@@ -21,19 +21,24 @@ def draw_boss_hp(surface, boss):
 
 def boss3_screen(window):
     clock  = pygame.time.Clock()
-    assets = load_boss3_assets(img_dir)
+    assets = load_assets(img_dir)
 
     # Background redimensionado para a tela
     bg = pygame.transform.scale(assets[BG_BOSS3], (WIDTH, 659))
 
     # --- Grupos de sprites
-    all_sprites       = pygame.sprite.Group()
-    platforms         = pygame.sprite.Group()
-    blocks            = pygame.sprite.Group()
-    floor_group       = pygame.sprite.Group()   # só o chão — usado pelo boss
-    all_bullets       = pygame.sprite.Group()
-    enemy_projectiles = pygame.sprite.Group()
-    mines_group       = pygame.sprite.Group()
+    all_groups ={
+        'all_sprites'       : pygame.sprite.Group(),
+        'platforms'         : pygame.sprite.Group(),
+        'blocks'            : pygame.sprite.Group(),
+        'floor_group'       : pygame.sprite.Group(),   # só o chão — usado pelo boss
+        'all_bullets'       : pygame.sprite.Group(),
+        'enemy_projectiles' : pygame.sprite.Group(),
+        'mines_group'       : pygame.sprite.Group(),
+        'all_enemies'       : pygame.sprite.Group()
+    }
+    all_groups['all_enemies'].add(all_groups['enemy_projectiles'])
+    all_groups['all_enemies'].add(all_groups['mines_group'])
 
     # --- Mapa
     for row in range(len(MAP3)):
@@ -42,19 +47,20 @@ def boss3_screen(window):
             if tile_type != EMPTY:
                 img = None if tile_type == INVIS else assets[tile_type]
                 tile = Tile(img, row, col)
-                all_sprites.add(tile)
+                all_groups['all_sprites'].add(tile)
                 if tile_type == BLOCK:
-                    blocks.add(tile)
+                    all_groups['blocks'].add(tile)
                 elif tile_type in (PLATF, INVIS):
-                    platforms.add(tile)
+                    all_groups['platforms'].add(tile)
                     # Linha 13 = chão (y=520) vai para floor_group
                     if row == 13:
-                        floor_group.add(tile)
+                        all_groups['floor_group'].add(tile)
 
     # --- Player
     player = Player(assets[PLAYER_IMG], 11, 2,
-                    platforms, blocks, all_bullets, assets, all_sprites)
-    all_sprites.add(player)
+                    assets,
+                    all_groups)
+    all_groups['all_sprites'].add(player)
 
     # --- Boss
     boss = Boss3(
@@ -66,12 +72,12 @@ def boss3_screen(window):
         assets[BOSS_GEAR_IMG],
         WIDTH - BOSS3_WIDTH - 30,
         13 * TILE_SIZE,
-        blocks, floor_group,
+        all_groups['blocks'], all_groups['floor_group'],
         assets[NAIL_IMG], assets[GEAR_IMG], assets[MINE_IMG],
         assets[EXPLOSION_IMG], assets[WRENCH_SLASH_IMG],
-        enemy_projectiles, mines_group, all_sprites
+        all_groups['enemy_projectiles'], all_groups['mines_group'], all_groups['all_sprites']
     )
-    all_sprites.add(boss)
+    all_groups['all_sprites'].add(boss)
     boss.player_ref = player   # para pregos mirarem no jogador
 
     font_big = pygame.font.SysFont(None, 80)
@@ -88,20 +94,20 @@ def boss3_screen(window):
                 if event.key == pygame.K_r:
                     state = INIT
 
-        all_sprites.update()
+        all_groups['all_sprites'].update()
 
         # Colisão: balas do player × boss
-        hits = pygame.sprite.spritecollide(boss, all_bullets, True)
+        hits = pygame.sprite.spritecollide(boss, all_groups['all_bullets'], True)
         for _ in hits:
             boss.take_damage(1)
 
         # Colisão: balas do player × minas — dispara explosão
-        mine_bullet_hits = pygame.sprite.groupcollide(mines_group, all_bullets, False, True)
+        mine_bullet_hits = pygame.sprite.groupcollide(all_groups['mines_group'], all_groups['all_bullets'], False, True)
         for mine in mine_bullet_hits:
             mine.explode()
 
         # Colisão: projéteis do boss × player
-        if pygame.sprite.spritecollide(player, enemy_projectiles, True):
+        if pygame.sprite.spritecollide(player, all_groups['enemy_projectiles'], True):
             player.speedy = -8
 
         # Colisão: golpe da chave × player
@@ -111,7 +117,7 @@ def boss3_screen(window):
             player.rect.x += 60 * boss.direction
 
         # Colisão: minas × player — dispara explosão
-        mine_player_hits = pygame.sprite.spritecollide(player, mines_group, False)
+        mine_player_hits = pygame.sprite.spritecollide(player, all_groups['mines_group'], False)
         for mine in mine_player_hits:
             mine.explode()
             player.speedy = -8
@@ -120,7 +126,7 @@ def boss3_screen(window):
         window.fill((30, 25, 20))  # fundo preto para cobrir área abaixo do bg
         window.blit(bg, (0, 0))
         window.set_clip((0, 0, WIDTH, 659))
-        all_sprites.draw(window)
+        all_groups['all_sprites'].draw(window)
         window.set_clip(None)
 
         if wrench_rect:

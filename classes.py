@@ -121,6 +121,7 @@ class Player(pygame.sprite.Sprite):
         # Atualiza a posição da hitbox
         self.hitbox.center = self.rect.center
         
+        #region -- Movimento em y
         # Dispara enquanto o botão esquerdo do mouse estiver pressionado
         # E o player estiver vivo
         if pygame.mouse.get_pressed()[0] and self.alive == True:
@@ -179,8 +180,8 @@ class Player(pygame.sprite.Sprite):
                     self.speedy = 0
                     # Atualiza estado
                     self.state = STILL
-            
-        # -- Movimento em x --
+        #endregion
+        #region -- Movimento em x --
         self.rect.x += self.speedx
         
         # Mantém a protagonista dentro da tela
@@ -212,7 +213,9 @@ class Player(pygame.sprite.Sprite):
             # Indo para a esquerda
             elif self.speedx < 0:
                 self.rect.left = collision.rect.right
+        #endregion
 
+        #region -- Hit
         # Pega o momento atual
         now = pygame.time.get_ticks()
         # Vê o tempo desde o último hit
@@ -245,7 +248,7 @@ class Player(pygame.sprite.Sprite):
             self.image.set_alpha(alpha)
         else:
             self.image.set_alpha(255)
-        
+        #endregion
     # Jogador atira em direção ao cursor do mouse
     def shoot(self):
         # Verifica se pode atirar

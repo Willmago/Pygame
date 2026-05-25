@@ -71,13 +71,13 @@ def init_screen(window):
 
         # - Verifica se o usuário apertou alguma tecla...
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_3, pygame.K_KP3, pygame.K_F3):
-                state = BOSS3   # Tecla 3 (ou F3, ou numpad 3) → boss do rato
-            else:
-                state = BOSS1   # Qualquer outra tecla → inicia o jogo normalmente
             # E se a tecla é "enter"...
             if event.key == pygame.K_RETURN:
                 state = MAUA # ... e inicia o jogo
+            # Se a tecla for 3 ou f3...
+            elif event.key in (pygame.K_3, pygame.K_KP3, pygame.K_F3):
+                state = BOSS3   # Tecla 3 (ou F3, ou numpad 3) → boss do rato
+            
 
     logo = assets[LOGO_IMG]
     logo_rect = logo.get_rect()
@@ -121,8 +121,8 @@ def game_screen(window, mapa, boss):
         'all_enemies': all_enemies
     }
 
-    boss_music = ''
-    music_vol = 0
+    boss_music = 'maua_theme.mp3'
+    music_vol = 0.2
     # Gera o chefão de acordo com a tela
     if boss == MAUA:
         # Spawna o boss Mauazinho
@@ -130,11 +130,7 @@ def game_screen(window, mapa, boss):
         # Configura a música do boss
         boss_music = 'maua_theme.mp3'
         music_vol = 0.2
-    elif boss == BOSS2:
-        enemy = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
-        # Configura a música do boss
-        boss_music = 'maua_theme.mp3'
-        music_vol = 0.2
+    
 
     # Gera o player
     player = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
@@ -175,12 +171,12 @@ def game_screen(window, mapa, boss):
                     state = BOSS2
                 elif event.key == pygame.K_3:
                     state = BOSS3
-                elif event.key == pygame.K_r:
+
                 # Se o boss estiver morto e o player apertar enter...
-                if event.key == pygame.K_RETURN and enemy.alive == False:
+                elif event.key == pygame.K_RETURN and enemy.alive == False:
                     # Muda de tela de acordo com o boss
                     if boss == MAUA:
-                        state = WIN
+                        state = BOSS3
                 # Se o player apertar "ESC" ou "R"...
                 elif event.key == pygame.K_ESCAPE:
                     # Volta para a tela inicial
@@ -234,5 +230,7 @@ def game_screen(window, mapa, boss):
 
 # -- Tela de fim
 def win_screen(window):
-    #window.blit("Olá")
+
+    init_screen(window)
+
     return WIN

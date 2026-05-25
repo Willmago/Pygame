@@ -239,35 +239,37 @@ def load_assets(img_dir):
     assets[PLATF]      = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
     assets[BULLET1]    = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert_alpha()
 
-    # Assets do Boss 1 (Mauazinho)
-    maua_files = {
-        MAUA_IMG:        'mauazinho.png',
-        MAUA_BULLET_IMG: 'maua_bullet.png',
-        MAUA_LASER_IMG:  'maua_laser.png',
-    }
-    for key, filename in maua_files.items():
-        full_path = path.join(img_dir, filename)
-        if not path.exists(full_path):
-            print(f'[BOSS1] ARQUIVO FALTANDO: {full_path}')
-            surf = pygame.Surface((64, 64))
-            surf.fill((255, 0, 255))
-            assets[key] = surf
-        else:
-            try:
-                assets[key] = pygame.image.load(full_path).convert_alpha()
-            except Exception as e:
-                print(f'[BOSS1] ERRO ao carregar {filename}: {e}')
-                surf = pygame.Surface((64, 64))
-                surf.fill((255, 0, 255))
-                assets[key] = surf
+    # Mauazinho
+    assets[MAUA_IDLE_IMG] = pygame.image.load(path.join(img_dir, 'maua_idle.png')).convert_alpha()
+    assets[MAUA_WALK_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_walk0.png')).convert_alpha()
+    assets[MAUA_WALK_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_walk1.png')).convert_alpha()
+    assets[MAUA_LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_laser0.png')).convert_alpha()
+    assets[MAUA_LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_laser1.png')).convert_alpha()
+    assets[MAUA_LASER_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_laser2.png')).convert_alpha()
+    assets[MAUA_SHOOT_IMG] = pygame.image.load(path.join(img_dir, 'maua_shoot.png')).convert_alpha()
+    assets[MAUA_DEAD_IMG] = pygame.image.load(path.join(img_dir, 'maua_dead.png')).convert_alpha()
+    assets[LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'laser0.png')).convert_alpha()
+    assets[LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'laser1.png')).convert_alpha()
+    assets[MAUA_BULLET_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_bullet0.png')).convert_alpha()
+    assets[MAUA_BULLET_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_bullet1.png')).convert_alpha()
+    assets[MAUA_BULLET_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_bullet2.png')).convert_alpha()
+    assets[MAUA_BACKGROUND_IMG] = pygame.image.load(path.join(img_dir, 'maua_background.png')).convert()
 
-    return assets
+    # - Cenário
+    assets[LOGO_IMG] = pygame.image.load(path.join(img_dir, 'logo.png')).convert_alpha()
+    assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
+    assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
+    assets[DIRTS] = pygame.image.load(path.join(img_dir, 'dirt.png')).convert_alpha()
+    assets[STONE] = pygame.image.load(path.join(img_dir, 'stone.png')).convert_alpha()
+    assets[CLOUD] = pygame.image.load(path.join(img_dir, 'cloud.png')).convert_alpha()
 
+    # - Sons
+    assets[SHOOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+    assets[MAUA_SHOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot.wav'))
+    assets[MAUA_SHOT_SND1] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot2.wav'))
+    assets[MAUA_LASER_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_laser.wav'))
+    assets[MAUA_WALK_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_walk.flac'))
 
-# Função separada para carregar os assets exclusivos do boss3
-# Chamada apenas quando a fase do boss3 é iniciada
-def load_boss3_assets(img_dir):
-    assets = load_assets(img_dir)  # reutiliza os assets base
     files = {
         BOSS_IMG:        'Chefao_Poli.png',
         BOSS_WALK_IMG:   'Sprite_lado_andando_perna_esquerda_frente.png',
@@ -317,40 +319,7 @@ def load_boss3_assets(img_dir):
                 surf.fill((255, 0, 255))
                 assets[key] = surf
 
-    assets[BULLET1] = pygame.image.load(path.join(img_dir, 'Tiro1.png')).convert_alpha()
-
-    # Mauazinho
-    assets[MAUA_IDLE_IMG] = pygame.image.load(path.join(img_dir, 'maua_idle.png')).convert_alpha()
-    assets[MAUA_WALK_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_walk0.png')).convert_alpha()
-    assets[MAUA_WALK_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_walk1.png')).convert_alpha()
-    assets[MAUA_LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_laser0.png')).convert_alpha()
-    assets[MAUA_LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_laser1.png')).convert_alpha()
-    assets[MAUA_LASER_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_laser2.png')).convert_alpha()
-    assets[MAUA_SHOOT_IMG] = pygame.image.load(path.join(img_dir, 'maua_shoot.png')).convert_alpha()
-    assets[MAUA_DEAD_IMG] = pygame.image.load(path.join(img_dir, 'maua_dead.png')).convert_alpha()
-    assets[LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'laser0.png')).convert_alpha()
-    assets[LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'laser1.png')).convert_alpha()
-    assets[MAUA_BULLET_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_bullet0.png')).convert_alpha()
-    assets[MAUA_BULLET_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_bullet1.png')).convert_alpha()
-    assets[MAUA_BULLET_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_bullet2.png')).convert_alpha()
-    assets[MAUA_BACKGROUND_IMG] = pygame.image.load(path.join(img_dir, 'maua_background.png')).convert()
-
-    # - Cenário
-    assets[LOGO_IMG] = pygame.image.load(path.join(img_dir, 'logo.png')).convert_alpha()
-    assets[BLOCK] = pygame.image.load(path.join(img_dir, 'tile-block.png')).convert()
-    assets[PLATF] = pygame.image.load(path.join(img_dir, 'tile-wood.png')).convert()
-    assets[DIRTS] = pygame.image.load(path.join(img_dir, 'dirt.png')).convert_alpha()
-    assets[STONE] = pygame.image.load(path.join(img_dir, 'stone.png')).convert_alpha()
-    assets[CLOUD] = pygame.image.load(path.join(img_dir, 'cloud.png')).convert_alpha()
-
-    # - Sons
-    assets[SHOOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
-    assets[MAUA_SHOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot.wav'))
-    assets[MAUA_SHOT_SND1] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot2.wav'))
-    assets[MAUA_LASER_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_laser.wav'))
-    assets[MAUA_WALK_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_walk.flac'))
-
-    return assets
+    return assets  
 
 # Função para carregar e tocar uma música
 def music(name, volume):
