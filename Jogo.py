@@ -21,7 +21,6 @@ def load_hp_imgs(img_dir):
             surf.fill((200, 50, 50) if key == 1 else (200, 200, 50) if key == 2 else (50, 200, 50))
             hp_imgs[key] = surf
     return hp_imgs
-
 hp_imgs = load_hp_imgs(img_dir)
 
 # --- Loop geral do jogo
@@ -36,7 +35,7 @@ while state != QUIT:
         state = init_screen(window)
 
     elif state == MAUA:
-        state = game_screen(window, MAP, state)
+        state = game_screen(window, MAP, state, hp_imgs)
     # - Tela segundo chefe
     elif state == JARE_GV:
         state = boss_2()

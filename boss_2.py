@@ -90,16 +90,6 @@ def main():
         draw_hud(window, score, pm.phase)  # HUD na frente da cauda
         pm.draw_fg(window, tick)           # banner de transição no topo
         if game_over: draw_game_over(window, win)
-        if tick < 240 and not game_over:
-            lines = [
-                "WASD/Setas: mover  |  W/Espaço: pular  |  Z/Ctrl: atirar",
-                "Fase 1: desvie das cabeças  |  Fase 2: chuva de mísseis  |  Fase 3: rasteiros + bolinhas"
-            ]
-            for i,line in enumerate(lines):
-                t = font_small.render(line,True,C_BLACK)
-                window.blit(t,(WIDTH//2-t.get_width()//2+1,HEIGHT-65+i*22+1))
-                window.blit(font_small.render(line,True,C_WHITE),
-                            (WIDTH//2-t.get_width()//2,HEIGHT-65+i*22))
         pygame.display.flip()
     return state
 # ===== Cuphead-style Boss Fight — 3 Fases =====

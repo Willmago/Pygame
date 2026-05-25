@@ -153,10 +153,17 @@ def boss3_screen(window, hp_imgs):
         all_sprites.update()
 
         # --- Colisões de dano ao player ---
-        proj_hits = pygame.sprite.spritecollide(player, enemy_projectiles, True)
+        proj_hits = pygame.sprite.spritecollide(player, enemy_projectiles, True,
+                        lambda p, n: p.rect.colliderect(n.hitbox) if hasattr(n, 'hitbox') else p.rect.colliderect(n.rect))
         if proj_hits:
             if player_take_damage():
                 player.speedy = -8
+
+        # Contato direto com o corpo do boss
+        if boss.alive and player.rect.colliderect(boss.rect):
+            if player_take_damage():
+                player.speedy = -8
+                player.rect.x += 60 * (1 if player.rect.centerx < boss.rect.centerx else -1)
 
         wrench_rect = boss.get_wrench_rect()
         if wrench_rect and player.rect.colliderect(wrench_rect):
