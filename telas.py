@@ -74,7 +74,7 @@ def init_screen(window):
             if event.key in (pygame.K_3, pygame.K_KP3, pygame.K_F3):
                 state = BOSS3   # Tecla 3 (ou F3, ou numpad 3) → boss do rato
             else:
-                state = BOSS1   # Qualquer outra tecla → inicia o jogo normalmente
+                state = MAUA   # Qualquer outra tecla → inicia o jogo normalmente
             # E se a tecla é "enter"...
             if event.key == pygame.K_RETURN:
                 state = MAUA # ... e inicia o jogo
@@ -177,10 +177,10 @@ def game_screen(window, mapa, boss):
                     state = BOSS3
                 elif event.key == pygame.K_r:
                 # Se o boss estiver morto e o player apertar enter...
-                if event.key == pygame.K_RETURN and enemy.alive == False:
+                    if event.key == pygame.K_RETURN and enemy.alive == False:
                     # Muda de tela de acordo com o boss
-                    if boss == MAUA:
-                        state = WIN
+                        if boss == MAUA:
+                            state = WIN
                 # Se o player apertar "ESC" ou "R"...
                 elif event.key == pygame.K_ESCAPE:
                     # Volta para a tela inicial

@@ -52,8 +52,14 @@ def boss3_screen(window):
                         floor_group.add(tile)
 
     # --- Player
-    player = Player(assets[PLAYER_IMG], 11, 2,
-                    platforms, blocks, all_bullets, assets, all_sprites)
+    all_groups = {
+        'all_sprites': all_sprites,
+        'platforms':   platforms,
+        'blocks':      blocks,
+        'all_bullets': all_bullets,
+        'all_enemies': pygame.sprite.Group(),
+    }
+    player = Player(assets[PLAYER_IMG], 11, 2, assets, all_groups)
     all_sprites.add(player)
 
     # --- Boss

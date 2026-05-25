@@ -92,6 +92,15 @@ img_dir = path.join(path.dirname(__file__), 'assets/img')
 # e a que contem os sons
 snd_dir = path.join(path.dirname(__file__), 'assets/snd')
 
+# Imagens do Boss 1 (Mauazinho)
+MAUA_IMG        = 'maua_img'
+MAUA_BULLET_IMG = 'maua_bullet_img'
+MAUA_LASER_IMG  = 'maua_laser_img'
+
+# -- Boss 1 (Mauazinho)
+MAUA_SPD        = 4    # Velocidade de caminhada do Mauazinho
+MAUA_BULLET_SPD = 8    # Velocidade da bala do Mauazinho
+MAUA_BULLET_CD  = 800  # Cooldown entre tiros do Mauazinho (ms)
 # --- Imagens
 # - Cores
 BLACK = (0, 0, 0)
@@ -135,15 +144,6 @@ MAUA_SHOT_SND = 'maua_shot_snd'
 MAUA_SHOT_SND1 = 'maua_shot_snd1'
 MAUA_WALK_SND = 'maua_walk_snd'
 
-# -- Define os tipos de tiles
-BLOCK = 0
-PLATF = 1
-DIRTS = 2
-STONE = 3
-CLOUD = 4
-EMPTY = -1
-INVIS = 2   # Plataforma invisível (colisão sem sprite visível)
-
 BOSS_IMG        = 'boss_img'
 BOSS_WALK_IMG   = 'boss_walk_img'    # andando (perna esq frente)
 BOSS_NAIL_IMG   = 'boss_nail_img'    # atirando prego
@@ -157,6 +157,15 @@ GEAR_IMG        = 'gear_img'
 WRENCH_SLASH_IMG = 'wrench_slash_img'
 BG_BOSS3        = 'bg_boss3'
 
+
+# -- Define os tipos de tiles
+BLOCK = 0
+PLATF = 1
+DIRTS = 2
+STONE = 3
+CLOUD = 4
+EMPTY = -1
+INVIS = 2   # Plataforma invisível (colisão sem sprite visível)
 
 # - Define o mapa com os tipos de tiles (27 x 18)
 MAP = [
@@ -260,6 +269,61 @@ def load_assets(img_dir):
                 surf = pygame.Surface((64, 64))
                 surf.fill((255, 0, 255))
                 assets[key] = surf
+
+# - Cenário (necessário na tela inicial)
+    logo_path = path.join(img_dir, 'logo.png')
+    if path.exists(logo_path):
+        assets[LOGO_IMG] = pygame.image.load(logo_path).convert_alpha()
+    else:
+        surf = pygame.Surface((200, 200))
+        surf.fill((255, 0, 255))
+        assets[LOGO_IMG] = surf
+
+    # - Assets completos do Mauazinho
+    maua_extra = {
+        MAUA_IDLE_IMG:       'maua_idle.png',
+        MAUA_WALK_IMG_0:     'maua_walk0.png',
+        MAUA_WALK_IMG_1:     'maua_walk1.png',
+        MAUA_LASER_IMG_0:    'maua_laser0.png',
+        MAUA_LASER_IMG_1:    'maua_laser1.png',
+        MAUA_LASER_IMG_2:    'maua_laser2.png',
+        MAUA_SHOOT_IMG:      'maua_shoot.png',
+        MAUA_DEAD_IMG:       'maua_dead.png',
+        MAUA_BULLET_IMG_0:   'maua_bullet0.png',
+        MAUA_BULLET_IMG_1:   'maua_bullet1.png',
+        MAUA_BULLET_IMG_2:   'maua_bullet2.png',
+        LASER_IMG_0:         'laser0.png',
+        LASER_IMG_1:         'laser1.png',
+        MAUA_BACKGROUND_IMG: 'maua_background.png',
+    }
+    for key, filename in maua_extra.items():
+        full_path = path.join(img_dir, filename)
+        if not path.exists(full_path):
+            print(f'[MAUA] ARQUIVO FALTANDO: {full_path}')
+            surf = pygame.Surface((64, 64))
+            surf.fill((255, 0, 255))
+            assets[key] = surf
+        else:
+            try:
+                assets[key] = pygame.image.load(full_path).convert_alpha()
+            except Exception as e:
+                print(f'[MAUA] ERRO ao carregar {filename}: {e}')
+                surf = pygame.Surface((64, 64))
+                surf.fill((255, 0, 255))
+                assets[key] = surf
+
+    # - Sons
+    assets[SHOOT_SND]     = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+    assets[MAUA_SHOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot.wav'))
+    assets[MAUA_SHOT_SND1]= pygame.mixer.Sound(path.join(snd_dir, 'maua_shot2.wav'))
+    assets[MAUA_LASER_SND]= pygame.mixer.Sound(path.join(snd_dir, 'maua_laser.wav'))
+    assets[MAUA_WALK_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_walk.flac'))
+
+    # - Tiles extras
+    assets[DIRTS] = pygame.image.load(path.join(img_dir, 'dirt.png')).convert_alpha()
+    assets[STONE] = pygame.image.load(path.join(img_dir, 'stone.png')).convert_alpha()
+    assets[CLOUD] = pygame.image.load(path.join(img_dir, 'cloud.png')).convert_alpha()
+
 
     return assets
 
