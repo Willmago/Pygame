@@ -211,8 +211,6 @@ def game_screen(window, mapa, boss):
             # Desenha a barra de vida dele
             draw_boss_hp(window, enemy)
 
-            
-        
         # Se o player estiver morto...
         if player.alive == False:
             # Desenha um texto em duas linhas
