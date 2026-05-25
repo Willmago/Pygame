@@ -1,34 +1,74 @@
---- A fazer Willian
-- Ultimas mudanças
-    -> Grupo all_enemies: determina todas as ameaças que causam
-    dano ao player
--- Mauazinho
-- Sprites
-    -> Próprios (X)
-    -> Bala ( )
-    -> Laser (X)
-    -> Morto (X)
-- Balas (X)
-    -> Corrigir angulação (X)
-- Laser
-    -> Aviso (X)
-    -> Laser de fato (X)
-    -> Direção de laser (X)
-- Interação entre boss e player
-    -> Player leva dano e morre ( )
-    -> Boss leva dano e morre (X)
-
 --- Como executa o jogo
 
---- Vídeo 
+Para executar o jogo, abra o arquivo "jogo.py" em um
+intepretador de python
+
+--- Comandos
+W / Espaço  -> Pulo
+A           -> Move para esquerda
+D           -> Move para direita
+Mouse Esquerdo -> Atira
+Esc         -> Volta à tela inicial
 
 --- Integrantes
 -> Gustavo C.
 -> Henrique C.
 -> Willian C.
 
+--- Vídeo exemplo
+
+Abaixo segue um vídeo do jogo funcionando:
+
+
 --- Explicação do jogo
 
---- Movimentação básica ---
+    "Rinha de mascotes" é um shooter 2D em que a protagonista precisa
+enfrentar mascotes de diversas faculdades na tentativa de ganhar o
+título de "melhor mascote".
+    É um jogo de plataforma em que player pode atirar em seus inimigos.
+Cada fase é um chefe com ataques diferentes, inspirado em mascotes
+de faculdades da cidade de São Paulo.
 
-Baseada no exemplo "jump_platform" de "pygame-snippets"
+--- Sobre o desenvolvimento
+-- Movimentação básica
+A movimentação básica foi baseada no exemplo "jump_platform" de "pygame-snippets"
+
+-- Fase "Jacaré da FGV"
+Feito por Gustavo
+
+-- Fase "Rato da Poli USP"
+Feito por Henrique
+
+-- Fase "Mauazinho"
+Feito por Willian
+
+-- Visual
+- Sprites da raposa (protagonista)
+
+
+- Sprites do "Mauazinho"
+Feitos por Willian
+
+- Tileset da fase "Mauazinho"
+Feito por Willian
+
+-- Audio
+- Música da intro
+"Upbeat Sci-Fi Intro", por professorlamp em OpenGameArt.org
+Disponível em: https://opengameart.org/content/upbeat-sci-fi-intro#
+
+- Som de tiro (protagonista)
+"Futuristic Weapons / Assault Rifle", por Michael Klier em OpenGameArt.org
+Disponível em: https://opengameart.org/content/futuristic-weapons-assault-rifle
+
+- Sons de tiro (Mauazinho)
+"PewPews", por dklon em OpenGameArt.org.
+Disponível em: https://opengameart.org/content/pewpews
+
+- Som de laser (Mauazinho)
+"Laser shot", por Gumichan01 em OpenGameArt.org
+Disponível em: https://opengameart.org/content/laser-shot
+
+- Música da fase "Mauazinho"
+"Space Dimensions (8bit/Retro Version)", por Matthew Pablo em OpenGameArt.org
+Disponível em: https://opengameart.org/content/space-dimensions-8bitretro-version

@@ -9,8 +9,11 @@ pygame.font.init()
 
 # --- Constantes
 # -- Tela
-WIDTH = 1080    # Largura da tela
-HEIGHT = 720    # Altura da tela
+w = 1080
+d = 720
+# w, d = pygame.display.get_desktop_sizes()[0] # Pega o tamanho da tela
+WIDTH = w    # Largura da tela
+HEIGHT = d    # Altura da tela
 FPS = 30        # Taxa de quadros por segundo
 TITULO = 'OI'   # Título da janela
 
@@ -34,7 +37,7 @@ JUMP_SIZE = TILE_SIZE * 1.1 # Força do pulo
 SPEED_X = TILE_SIZE/3       # Velocidade horizontal (menor que a bala)
 
 # - Variáveis do Mauazinho
-MAUA_HP = 100                       # Vida máxima do chefe
+MAUA_HP = 200                       # Vida máxima do chefe
 MAUA_SPD = TILE_SIZE * (1/3)        # Velocidade de andar do chefe
 MAUA_BULLET_SPD = 10                # Velocidade horizontal das balas do chefe
 MAUA_BULLET_CD = 250                # Intervalo entre as balas
@@ -60,15 +63,18 @@ snd_dir = path.join(path.dirname(__file__), 'assets/snd')
 # - Cores
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
 PURPLE = (50, 0, 50)
 
 # - Player
+PLAYER_HP = 3
 I_FRAMES = 2 * 1000         # Tempo de invulnerabilidade
 PLAYER_IMG = 'player_img'   # Imagem base
 BULLET1 = 'Bullet1'         # Imagem do tiro
 
 # - Mauazinho 
-MAUA_SIZE = 128
+MAUA_SIZE = WIDTH / 7
+MAUA_BULLET_SIZE = MAUA_SIZE / 3
 MAUA_IDLE_IMG = 'maua_idle'
 MAUA_WALK_IMG_0 = 'maua_walk0'
 MAUA_WALK_IMG_1 = 'maua_walk1'
@@ -77,7 +83,9 @@ MAUA_LASER_IMG_1 = 'maua_laser1'
 MAUA_LASER_IMG_2 = 'maua_laser2'
 MAUA_SHOOT_IMG = 'maua_shoot'
 MAUA_DEAD_IMG = 'maua_dead'
-MAUA_BULLET_IMG = BULLET1
+MAUA_BULLET_IMG_0 = 'maua_bullet0'
+MAUA_BULLET_IMG_1 = 'maua_bullet1'
+MAUA_BULLET_IMG_2 = 'maua_bullet2'
 LASER_IMG_0 = 'laser0'
 LASER_IMG_1 =  'laser1'
 MAUA_BACKGROUND_IMG = 'maua_background'
@@ -88,7 +96,13 @@ LOGO_IMG = 'logo'
 # -- Sons
 SHOOT_SND = 'pew_snd'
 
-# - Define os tipos de tiles
+# - Mauazinho
+MAUA_LASER_SND = 'maua_laser_snd'
+MAUA_SHOT_SND = 'maua_shot_snd'
+MAUA_SHOT_SND1 = 'maua_shot_snd1'
+MAUA_WALK_SND = 'maua_walk_snd'
+
+# -- Define os tipos de tiles
 BLOCK = 0
 PLATF = 1
 DIRTS = 2
@@ -96,7 +110,7 @@ STONE = 3
 CLOUD = 4
 EMPTY = -1
 
-# Define o mapa com os tipos de tiles (27 x 18)
+# - Define o mapa com os tipos de tiles (27 x 18)
 MAP = [
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
@@ -118,7 +132,7 @@ MAP = [
     [STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE, STONE]
 ]
 
-# Mapa do segundo boss
+# - Mapa do segundo boss
 MAP2 = [
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
@@ -157,6 +171,9 @@ def load_assets(img_dir):
     assets[MAUA_DEAD_IMG] = pygame.image.load(path.join(img_dir, 'maua_dead.png')).convert_alpha()
     assets[LASER_IMG_0] = pygame.image.load(path.join(img_dir, 'laser0.png')).convert_alpha()
     assets[LASER_IMG_1] = pygame.image.load(path.join(img_dir, 'laser1.png')).convert_alpha()
+    assets[MAUA_BULLET_IMG_0] = pygame.image.load(path.join(img_dir, 'maua_bullet0.png')).convert_alpha()
+    assets[MAUA_BULLET_IMG_1] = pygame.image.load(path.join(img_dir, 'maua_bullet1.png')).convert_alpha()
+    assets[MAUA_BULLET_IMG_2] = pygame.image.load(path.join(img_dir, 'maua_bullet2.png')).convert_alpha()
     assets[MAUA_BACKGROUND_IMG] = pygame.image.load(path.join(img_dir, 'maua_background.png')).convert()
 
     # - Cenário
@@ -169,8 +186,18 @@ def load_assets(img_dir):
 
     # - Sons
     assets[SHOOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+    assets[MAUA_SHOT_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot.wav'))
+    assets[MAUA_SHOT_SND1] = pygame.mixer.Sound(path.join(snd_dir, 'maua_shot2.wav'))
+    assets[MAUA_LASER_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_laser.wav'))
+    assets[MAUA_WALK_SND] = pygame.mixer.Sound(path.join(snd_dir, 'maua_walk.flac'))
 
     return assets
+
+# Função para carregar e tocar uma música
+def music(name, volume):
+    pygame.mixer.music.load(path.join(snd_dir, name))
+    pygame.mixer.music.set_volume(volume)
+    pygame.mixer.music.play()
 
 # Gera tela principal
 window = pygame.display.set_mode((WIDTH, HEIGHT))

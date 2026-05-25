@@ -4,6 +4,7 @@ from config import *
 from telas import init_screen, game_screen
 
 # --- Loop geral do jogo
+music('intro.mp3', 0.2)
 while state != QUIT:
 
     # Controle de FPS
