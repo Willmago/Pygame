@@ -92,6 +92,15 @@ img_dir = path.join(path.dirname(__file__), 'assets/img')
 # e a que contem os sons
 snd_dir = path.join(path.dirname(__file__), 'assets/snd')
 
+# Imagens do Boss 1 (Mauazinho)
+MAUA_IMG        = 'maua_img'
+MAUA_BULLET_IMG = 'maua_bullet_img'
+MAUA_LASER_IMG  = 'maua_laser_img'
+
+# -- Boss 1 (Mauazinho)
+MAUA_SPD        = 4    # Velocidade de caminhada do Mauazinho
+MAUA_BULLET_SPD = 8    # Velocidade da bala do Mauazinho
+MAUA_BULLET_CD  = 800  # Cooldown entre tiros do Mauazinho (ms)
 # --- Imagens
 # - Cores
 BLACK = (0, 0, 0)
@@ -135,15 +144,6 @@ MAUA_SHOT_SND = 'maua_shot_snd'
 MAUA_SHOT_SND1 = 'maua_shot_snd1'
 MAUA_WALK_SND = 'maua_walk_snd'
 
-# -- Define os tipos de tiles
-BLOCK = 0
-PLATF = 1
-DIRTS = 2
-STONE = 3
-CLOUD = 4
-EMPTY = -1
-INVIS = 2   # Plataforma invisível (colisão sem sprite visível)
-
 BOSS_IMG        = 'boss_img'
 BOSS_WALK_IMG   = 'boss_walk_img'    # andando (perna esq frente)
 BOSS_NAIL_IMG   = 'boss_nail_img'    # atirando prego
@@ -157,6 +157,15 @@ GEAR_IMG        = 'gear_img'
 WRENCH_SLASH_IMG = 'wrench_slash_img'
 BG_BOSS3        = 'bg_boss3'
 
+
+# -- Define os tipos de tiles
+BLOCK = 0
+PLATF = 1
+DIRTS = 2
+STONE = 3
+CLOUD = 4
+EMPTY = -1
+INVIS = 2   # Plataforma invisível (colisão sem sprite visível)
 
 # - Define o mapa com os tipos de tiles (27 x 18)
 MAP = [
