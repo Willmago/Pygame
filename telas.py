@@ -1,8 +1,8 @@
-# --- Importa e inicia pacotes
+# -- Importa e inicia pacotes
 from config import *
 from classes import *
 
-
+#region Textos
 # Define a fonte padrão
 init_font = pygame.font.SysFont('bauhaus93', 48)
 dead_font = pygame.font.SysFont('georgia', 48)
@@ -25,6 +25,7 @@ dead_txt_rect_up = dead_txt_up.get_rect()
 
 dead_txt_down = dead_font.render("Pressione ESC para recomeçar", True, RED)
 dead_txt_rect_down = dead_txt_down.get_rect()
+#endregion
 
 # Função que coloca os blocos do tileset de acordo
 # com o mapa fornecido
@@ -122,6 +123,9 @@ def game_screen(window, mapa, boss):
         music_vol = 0.2
     elif boss == BOSS2:
         enemy = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
+        # Configura a música do boss
+        boss_music = 'maua_theme.mp3'
+        music_vol = 0.2
 
     # Gera o player
     player = Player(assets[PLAYER_IMG], 12, 2, assets, all_groups)
@@ -162,7 +166,7 @@ def game_screen(window, mapa, boss):
                 if event.key == pygame.K_RETURN and enemy.alive == False:
                     # Muda de tela de acordo com o boss
                     if boss == MAUA:
-                        state = BOSS2
+                        state = WIN
                 # Se o player apertar "ESC" ou "R"...
                 elif event.key == pygame.K_ESCAPE:
                     # Volta para a tela inicial
@@ -213,3 +217,8 @@ def game_screen(window, mapa, boss):
         pygame.display.flip()
 
     return state # Retorna o estado de jogo para mudar a tela
+
+# -- Tela de fim
+def win_screen(window):
+    #window.blit("Olá")
+    return WIN

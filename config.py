@@ -1,6 +1,7 @@
 # --- Importa e inicia pacotes
 import pygame
 from os import path
+import math
 
 # Inicializa o pygame e seus módulos
 pygame.init()
@@ -9,23 +10,26 @@ pygame.font.init()
 
 # --- Constantes
 # -- Tela
-w = 1080
-d = 720
-# w, d = pygame.display.get_desktop_sizes()[0] # Pega o tamanho da tela
-WIDTH = w    # Largura da tela
-HEIGHT = d    # Altura da tela
+OG = (1080, 720)
+HD = (1280, 720)
+UHD = (1080, 1920)
+w, h = OG
+#w, h = pygame.display.get_desktop_sizes()[0] # Pega o tamanho da tela
+WIDTH = w       # Largura da tela
+HEIGHT = h      # Altura da tela
 FPS = 30        # Taxa de quadros por segundo
 TITULO = 'OI'   # Título da janela
 
 # -- Estados de jogo
 # Determinam, principalmente, a tela a ser carregada
 INIT = 0    # Inicializando
-MAUA = 1   # Primeiro boss
+MAUA = 1    # Primeiro boss
 BOSS2 = 2   # Segundo boss
-QUIT = 3    # Jogo fecha
+WIN = 9     # Fim de jogo
+QUIT = 10   # Jogo fecha
 
 # -- Tamanhos
-TILE_SIZE = WIDTH / 27                   # Tamanho dos tiles
+TILE_SIZE = math.ceil(WIDTH / 27)                   # Tamanho dos tiles
 PLAYER_WIDTH = TILE_SIZE                # Largura do player
 PLAYER_HEIGHT = int(TILE_SIZE * 1.5)    # Altura do player
 
@@ -33,12 +37,13 @@ PLAYER_HEIGHT = int(TILE_SIZE * 1.5)    # Altura do player
 STILL = 0                   # estado No chão
 JUMPING = 1                 # estado Subindo
 FALLING = 2                 # estado Descendo
-JUMP_SIZE = TILE_SIZE * 1.1 # Força do pulo
+JUMP_SIZE = TILE_SIZE       # Força do pulo
 SPEED_X = TILE_SIZE/3       # Velocidade horizontal (menor que a bala)
 
 # - Variáveis do Mauazinho
 MAUA_HP = 200                       # Vida máxima do chefe
 MAUA_SPD = TILE_SIZE * (1/3)        # Velocidade de andar do chefe
+MAUA_BULLET_COUNT = 5               # Número de disparos por leva
 MAUA_BULLET_SPD = 10                # Velocidade horizontal das balas do chefe
 MAUA_BULLET_CD = 250                # Intervalo entre as balas
 MAUA_LASER_POWERUP = 2.5 * 1000     # Tempo para carregar o laser
@@ -120,9 +125,9 @@ MAP = [
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY],
+    [EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
-    [CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD],
+    [CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD, CLOUD, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, CLOUD, CLOUD],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
     [DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS, DIRTS],
@@ -200,6 +205,7 @@ def music(name, volume):
     pygame.mixer.music.play()
 
 # Gera tela principal
+#window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # Nome do jogo

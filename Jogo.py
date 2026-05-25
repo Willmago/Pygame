@@ -1,7 +1,7 @@
 # --- Importa e inicia pacotes
 import pygame
 from config import *
-from telas import init_screen, game_screen
+from telas import init_screen, game_screen, win_screen
 
 # --- Loop geral do jogo
 music('intro.mp3', 0.2)
@@ -19,5 +19,7 @@ while state != QUIT:
     # - Tela segundo chefe
     elif state == BOSS2:
         state = game_screen(window, MAP2, state)
+    elif state == WIN:
+        state = win_screen(window)
 
 pygame.quit()

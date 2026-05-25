@@ -374,7 +374,7 @@ class Mauazinho(pygame.sprite.Sprite):
         # Tamanho base
         size = (MAUA_SIZE, MAUA_SIZE)
         bullet_size = (MAUA_BULLET_SIZE, MAUA_BULLET_SIZE)
-        # -- Definição das imagens
+        #region -- Definição das imagens
         # Imagem normal
         self.idle_img = pygame.transform.scale(assets[MAUA_IDLE_IMG], size)
         # Andando
@@ -398,8 +398,9 @@ class Mauazinho(pygame.sprite.Sprite):
             pygame.transform.scale(assets[MAUA_BULLET_IMG_1], bullet_size),
             pygame.transform.scale(assets[MAUA_BULLET_IMG_2], bullet_size)
         ]
+        #endregion
 
-        # -- Sons
+        #region -- Sons
         # Carrega o som
         # Define seu volume
         # Andar
@@ -414,7 +415,9 @@ class Mauazinho(pygame.sprite.Sprite):
         # Laser
         self.laser_snd = assets[MAUA_LASER_SND]
         self.laser_snd.set_volume(0.3)
+        #endregion
 
+        #region variáveis de imagem
         # Anexo da imagem inicial
         # Começa com a invertida para que ele fique
         # virado à esquerda
@@ -434,7 +437,9 @@ class Mauazinho(pygame.sprite.Sprite):
         # Define a posição inicial
         self.rect.right = WIDTH - self.rect.width*2
         self.rect.bottom = HEIGHT - TILE_SIZE * 5
+        #endregion
 
+        #region Vida
         # Hitbox
         self.hitbox = self.rect.inflate(-20, 0)
         # Definição da vida inicial do boss
@@ -443,8 +448,9 @@ class Mauazinho(pygame.sprite.Sprite):
         # Vivo ou não. Usada para checar o estado
         # fora do boss
         self.alive = True
+        #endregion
 
-        # -- Definição dos estados do boss
+        #region -- Definição dos estados do boss
         # Parado
         self.idle_state = 'idle'
         # Andando
@@ -457,16 +463,17 @@ class Mauazinho(pygame.sprite.Sprite):
         # a vida do boss zera, ao invés de apenas
         # "apagá-lo" da tela
         self.dead_state = 'dead'
-        # Lista que contém todos os estados normais
-        # o estado "morto" não está aqui pois não
-        # é acessado pelo boss em seu ciclo padrão
+        # Lista que contém todos os estados normais.
+        # O estado "morto" não está aqui pois não
+        # é acessado pelo boss em seu ciclo padrão.
         # Alguns estão repetidos para diminuir a 
         # frequência de "idle"
-        self.all_states = [self.idle_state, self.walk_state, self.shoot_state, self.laser_state, self.walk_state, self.shoot_state, self.laser_state]
+        self.all_states = [self.idle_state, self.walk_state, self.shoot_state, self.laser_state, self.walk_state, self.shoot_state] #[self.idle_state, self.walk_state, self.shoot_state, self.laser_state, self.walk_state, self.shoot_state, self.laser_state]
         # Estado atual
         self.state = self.walk_state
+        #endregion
 
-        # -- Variáveis de estado
+        #region -- Variáveis de estado
         # - Walk
         # Velocidade de andar
         self.walk_speed = MAUA_SPD
@@ -497,6 +504,7 @@ class Mauazinho(pygame.sprite.Sprite):
             self.laser_state: 0.5 * 1000 + self.laser_powerup + self.laser_duration, # 2s a mais que o tempo total do laser
             self.dead_state: 100 * 1000
         }
+        #endregion
     # Método em que o Mauazinho fica parado.
     def idle(self):
         
@@ -569,19 +577,25 @@ class Mauazinho(pygame.sprite.Sprite):
         # Se o tempo desde o último tiro é maior 
         # que o cooldown entre tiros...
         if elapsed_time > self.shot_cd:
+            # número de balas
+            bullet_num = MAUA_BULLET_COUNT
             # Define se as balas surgem para a direita ou esquerda
             # de acordo com a direção
             # Diferença de ângulo entre as balas
-            angle_dif = 30
+            angle_dif = 35
             # Ângulo inicial
             base_angle = 5
+            multiplier = 1
             # Se a direção for à esquerda...
             if self.dir < 0:
                 # Altera o ângulo base
-                base_angle = 180-base_angle + angle_dif*2
+                base_angle = 180 - base_angle
+
+                multiplier = -1
             # Gera 3 balas em forma de cone
-            for i in range(0, 2+1):
-                bullet_angle = base_angle - angle_dif * i
+            for i in range(bullet_num):
+                
+                bullet_angle = base_angle - angle_dif * i * multiplier
                 bullet = Maua_bullet(self.bullet_imgs, (self.rect.center), bullet_angle)
                 # Adiciona-a no grupo de sprites
                 self.all_sprites.add(bullet)
@@ -705,6 +719,7 @@ class Mauazinho(pygame.sprite.Sprite):
             case self.dead_state:
                 self.dead()
 
+        #region Dano
         hits = pygame.sprite.spritecollide(self, self.all_bullets, True, collided)
 
         for hit in hits:
@@ -720,6 +735,7 @@ class Mauazinho(pygame.sprite.Sprite):
             self.all_enemies.remove(self)
         
         self.hitbox.center = self.rect.center
+        #endregion
 
     # Estado de morte
     def dead(self):
