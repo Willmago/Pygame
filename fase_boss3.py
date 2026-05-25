@@ -43,7 +43,7 @@ def draw_player_hp(surface, player, hp_imgs):
 
 def boss3_screen(window, hp_imgs):
     clock  = pygame.time.Clock()
-    assets = load_boss3_assets(img_dir)
+    assets = load_assets(img_dir)
 
     # Background redimensionado para a tela
     bg = pygame.transform.scale(assets[BG_BOSS3], (WIDTH, 659))
@@ -64,13 +64,13 @@ def boss3_screen(window, hp_imgs):
             if tile_type != EMPTY:
                 img = None if tile_type == INVIS else assets[tile_type]
                 tile = Tile(img, row, col)
-                all_sprites.add(tile)
+                all_groups['all_sprites'].add(tile)
                 if tile_type == BLOCK:
-                    blocks.add(tile)
+                    all_groups['blocks'].add(tile)
                 elif tile_type in (PLATF, INVIS):
                     platforms.add(tile)
                     if row == 13:
-                        floor_group.add(tile)
+                        all_groups['floor_group'].add(tile)
 
     # --- Player
     all_groups = {
@@ -98,10 +98,10 @@ def boss3_screen(window, hp_imgs):
         assets[BOSS_GEAR_IMG],
         WIDTH - BOSS3_WIDTH - 30,
         13 * TILE_SIZE,
-        blocks, floor_group,
+        all_groups['blocks'], all_groups['floor_group'],
         assets[NAIL_IMG], assets[GEAR_IMG], assets[MINE_IMG],
         assets[EXPLOSION_IMG], assets[WRENCH_SLASH_IMG],
-        enemy_projectiles, mines_group, all_sprites
+        all_groups['enemy_projectiles'], all_groups['mines_group'], all_groups['all_sprites']
     )
     all_sprites.add(boss)
     boss.player_ref = player
@@ -187,7 +187,7 @@ def boss3_screen(window, hp_imgs):
         window.fill((30, 25, 20))
         window.blit(bg, (0, 0))
         window.set_clip((0, 0, WIDTH, 659))
-        all_sprites.draw(window)
+        all_groups['all_sprites'].draw(window)
         window.set_clip(None)
 
         if wrench_rect:
