@@ -1,7 +1,6 @@
 # --- Tela do Boss 3: Rato no Robô
 import pygame
 from config import *
-
 from classes import Tile, Player, Boss3, player_movement
 
 
@@ -83,7 +82,9 @@ def boss3_screen(window, hp_imgs):
 
     # --- Player
     player = Player(assets[PLAYER_IMG], 11, 2, assets, all_groups)
-    player.hp = PLAYER_HP   # garante vida cheia ao entrar na fase
+    player.hp        = PLAYER_HP
+    player.jump_size = JUMP_SIZE_BOSS3          # pulo mais alto nessa fase
+    player.floor_y   = 13 * TILE_SIZE           # não desce abaixo do chão visual
     all_sprites.add(player)
 
     # --- Controle de dano do player (i-frames manual para boss3)

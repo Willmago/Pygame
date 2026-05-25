@@ -42,6 +42,7 @@ STILL = 0                   # estado No chão
 JUMPING = 1                 # estado Subindo
 FALLING = 2                 # estado Descendo
 JUMP_SIZE = TILE_SIZE       # Força do pulo
+JUMP_SIZE_BOSS3 = int(TILE_SIZE * 1.35)  # Pulo um pouco mais alto no boss 3
 SPEED_X = TILE_SIZE/3       # Velocidade horizontal (menor que a bala)
 
 # - Variáveis do Mauazinho
@@ -214,9 +215,9 @@ MAP2 = [
 
 # Mapa do boss 3 — Oficina (27 colunas x 18 linhas, TILE_SIZE=40 → 1080x720)
 # bg: (1080, 659), y=0
-# Prateleira: linha 7,  cols 13-23 (y=280) — acima da mesa, alcançável pulando da mesa
-# Mesa:       linha 11, cols 9-24  (y=440) — alcançável com pulo do chão (diff=80px)
-# Chão:       linha 13 (y=520) — alinhado com chão visual
+# Prateleira esq: linha 6, cols 2-6   | Prateleira central: linha 6, cols 13-18
+# Armários esq:   linha 10, cols 2-7  | Bancada central:    linha 10, cols 9-19
+# Chão:           linha 13 (y=520)
 MAP3 = [
     [EMPTY]*27,  # 0
     [EMPTY]*27,  # 1
@@ -224,14 +225,14 @@ MAP3 = [
     [EMPTY]*27,  # 3
     [EMPTY]*27,  # 4
     [EMPTY]*27,  # 5
-    [EMPTY]*27,  # 6
-    # linha 7 — prateleira central (sobre a mesa)
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+    # linha 6 — prateleira esquerda (cols 2-6) + prateleira central (cols 13-18)
+    [EMPTY, EMPTY, INVIS, INVIS, INVIS, INVIS, INVIS, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+    [EMPTY]*27,  # 7
     [EMPTY]*27,  # 8
     [EMPTY]*27,  # 9
-    [EMPTY]*27,  # 10
-    # linha 11 — tampo da mesa central
-    [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+    # linha 10 — armários esquerda (cols 2-7) + bancada central (cols 9-19)
+    [EMPTY, EMPTY, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, EMPTY, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, INVIS, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY],
+    [EMPTY]*27,  # 11
     [EMPTY]*27,  # 12
     # linha 13 — chão da oficina (invisível)
     [INVIS]*27,

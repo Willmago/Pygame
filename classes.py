@@ -118,6 +118,15 @@ class Player(pygame.sprite.Sprite):
 
         # Marca o tempo do último tiro (em ms)
         self.last_shot = 0
+
+        # Tamanho do pulo (pode ser sobrescrito por fase)
+        self.jump_size = JUMP_SIZE
+
+        # Contador de frames para ignorar plataformas ao descer
+        self.drop_timer = 0
+
+        # Limite inferior do player (None = usa HEIGHT)
+        self.floor_y = None
     
     # Método que atualiza a posição do personagem
     def update(self):
@@ -167,23 +176,29 @@ class Player(pygame.sprite.Sprite):
                 self.state = STILL
 
         # Tratamento especial para plataformas
-        # Plataformas devem ser transponíveis quando o personagem está pulando
-        # mas devem pará-lo quando ele está caindo. Para pará-lo é necessário que
-        # o jogador tenha passado daquela altura durante o último pulo.
-        if self.speedy > 0: # Está indo para baixo
+        if self.drop_timer > 0:
+            self.drop_timer -= 1
+
+        if self.speedy > 0 and self.drop_timer == 0:
             collisions = pygame.sprite.spritecollide(self, self.platforms, False)
-            # Para cada tile de plataforma que colidiu com o personagem
-            # verifica se ele estava aproximadamente na parte de cima
             for platform in collisions:
-                # Verifica se a altura alcançada durante o pulo está acima da
-                # plataforma
                 if self.highest_y <= platform.rect.top:
-                    # Atualiza a altura
                     self.rect.bottom = platform.rect.top
-                    # Zera a velocidade
                     self.speedy = 0
-                    # Atualiza estado
                     self.state = STILL
+        #endregion
+
+        #region -- Limites da tela
+        max_bottom = self.floor_y if self.floor_y is not None else HEIGHT
+
+        if self.rect.top < 0:
+            self.rect.top = 0
+            self.speedy = 0
+        if self.rect.bottom > max_bottom:
+            self.rect.bottom = max_bottom
+            self.speedy = 0
+            self.state = STILL
+            self.drop_timer = 0
         #endregion
         #region -- Movimento em x --
         self.rect.x += self.speedx
@@ -287,9 +302,8 @@ class Player(pygame.sprite.Sprite):
      
     # Método que faz o personagem pular
     def jump(self):
-        # Só pode pular se não estiver pulando ou caindo
         if self.state == STILL:
-            self.speedy -= JUMP_SIZE
+            self.speedy -= self.jump_size
             self.state = JUMPING
     
 class Bullet(pygame.sprite.Sprite):
@@ -360,6 +374,10 @@ def player_movement(player, event):
             # - Pulo
             elif event.key == pygame.K_UP or event.key == pygame.K_w or event.key == pygame.K_SPACE:
                 player.jump()
+            # - Descer da plataforma
+            elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
+                player.drop_timer = 12
+                player.speedy = 5
 
         # Verifica se soltou alguma tecla.
         if event.type == pygame.KEYUP:
